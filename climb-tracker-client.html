@@ -118,7 +118,8 @@ let maxSessions=3, saveTimeout=null, allCheckins=[];
 function weekStart(offset=0){
   const d=new Date(), day=d.getDay(), dfm=(day+6)%7;
   d.setDate(d.getDate()-dfm+offset*7); d.setHours(0,0,0,0);
-  return d.toISOString().split('T')[0];
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
 }
 function getKW(ws){
   const d=new Date(ws+'T00:00:00'), jan4=new Date(d.getFullYear(),0,4);
