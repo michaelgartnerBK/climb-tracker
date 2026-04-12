@@ -301,9 +301,8 @@ function toggle(di,key){
   state[di][key]=state[di][key]===true?null:true;
   renderDays();
   updateScoreDisplay();
-  // Each day has its own timer - clicking different days saves all of them
-  clearTimeout(saveTimeouts[di]);
-  saveTimeouts[di]=setTimeout(()=>saveDay(di),600);
+  // Save only the changed field immediately
+  saveField(di,key,state[di][key]);
 }
 
 function updateScoreDisplay(){
@@ -321,24 +320,30 @@ function updateScoreDisplay(){
   if(vStrip) vStrip.style.background=v.bg;
 }
 
-async function saveDay(di){
+async function saveField(di,key,val){
   const ws=currentWS;
-  const s=state[di];
-  const allNull=s.training===null&&s.food===null&&s.sleep===null;
   try{
-    if(allNull){
-      await api(`checkins?client_id=eq.${CLIENT_ID}&week_start=eq.${ws}&day_index=eq.${di}`,'DELETE');
-    }else{
-      // Upsert complete state for this day
-      await api('checkins','POST',{
-        client_id:CLIENT_ID,
-        week_start:ws,
-        day_index:di,
-        training:s.training,
-        food:s.food,
-        sleep:s.sleep,
-        updated_at:new Date().toISOString()
+    // Check if row exists
+    const existing=await api(`checkins?client_id=eq.${CLIENT_ID}&week_start=eq.${ws}&day_index=eq.${di}&select=id,training,food,sleep`);
+    if(existing&&existing.length>0){
+      // Row exists - PATCH only the changed field
+      const patch={[key]:val,updated_at:new Date().toISOString()};
+      await fetch(`${SB_URL}/rest/v1/checkins?client_id=eq.${CLIENT_ID}&week_start=eq.${ws}&day_index=eq.${di}`,{
+        method:'PATCH',
+        headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
+        body:JSON.stringify(patch)
       });
+      // Sync local state with DB values
+      const row=existing[0];
+      state[di]={training:row.training,food:row.food,sleep:row.sleep};
+      state[di][key]=val;
+    } else {
+      // Row doesn't exist - INSERT with just this field
+      const insert={client_id:CLIENT_ID,week_start:ws,day_index:di,training:null,food:null,sleep:null,updated_at:new Date().toISOString()};
+      insert[key]=val;
+      // If val is null and no row exists, nothing to save
+      if(val===null) return;
+      await api('checkins','POST',insert);
     }
     const dot=document.getElementById('saveDot');
     if(dot){dot.classList.add('visible');setTimeout(()=>dot.classList.remove('visible'),1500);}
