@@ -81,7 +81,7 @@ const CLIENT_ID=params.get('id');
 
 // currentWS is set ONCE at init - never recalculated during session
 let clientData=null, state=DAYS.map(()=>({training:null,food:null,sleep:null}));
-let maxSessions=3, saveTimeout=null, allCheckins=[], currentWS=null;
+let maxSessions=3, saveTimeouts={}, allCheckins=[], currentWS=null;
 
 function localDate(d){
   const dt=d||new Date();
@@ -301,8 +301,9 @@ function toggle(di,key){
   state[di][key]=state[di][key]===true?null:true;
   renderDays();
   updateScoreDisplay();
-  clearTimeout(saveTimeout);
-  saveTimeout=setTimeout(()=>saveDay(di),800);
+  // Each day has its own timer - clicking different days saves all of them
+  clearTimeout(saveTimeouts[di]);
+  saveTimeouts[di]=setTimeout(()=>saveDay(di),600);
 }
 
 function updateScoreDisplay(){
