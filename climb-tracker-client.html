@@ -98,10 +98,14 @@ function weekStart(offset=0){
 
 function getKW(ws){
   const d=new Date(ws+'T12:00:00');
-  const jan4=new Date(d.getFullYear(),0,4,12,0,0);
-  const s=new Date(jan4);
-  s.setDate(jan4.getDate()-(jan4.getDay()===0?6:jan4.getDay()-1));
-  return Math.floor((d-s)/(7*86400000))+1;
+  const year=d.getFullYear();
+  // Find Thursday of current week (ISO weeks defined by Thursday)
+  const thu=new Date(d);
+  thu.setDate(d.getDate()-(d.getDay()||7)+4);
+  // Find first Thursday of the year
+  const yearStart=new Date(thu.getFullYear(),0,1);
+  // Calculate week number
+  return Math.ceil(((thu-yearStart)/86400000+1)/7);
 }
 
 function weekLabel(ws){
@@ -231,7 +235,7 @@ function renderApp(msg){
       <div class="hero-bottom">
         <div>
           <div class="hero-name">${clientData.name}</div>
-          <div class="hero-wk">WK ${kw} · ${wlbl}</div>
+          <div class="hero-wk">${wlbl}</div>
         </div>
         ${streak>0?`<div class="streak-block"><div class="streak-num">${streak}</div><div class="streak-lbl">Week Streak</div></div>`:''}
       </div>
