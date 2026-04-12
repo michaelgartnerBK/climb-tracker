@@ -322,14 +322,23 @@ function updateScoreDisplay(){
 }
 
 async function saveDay(di){
-  const ws=currentWS; // Always use the week_start set at init
+  const ws=currentWS;
   const s=state[di];
   const allNull=s.training===null&&s.food===null&&s.sleep===null;
   try{
     if(allNull){
       await api(`checkins?client_id=eq.${CLIENT_ID}&week_start=eq.${ws}&day_index=eq.${di}`,'DELETE');
     }else{
-      await api('checkins','POST',{client_id:CLIENT_ID,week_start:ws,day_index:di,training:s.training,food:s.food,sleep:s.sleep,updated_at:new Date().toISOString()});
+      // Upsert complete state for this day
+      await api('checkins','POST',{
+        client_id:CLIENT_ID,
+        week_start:ws,
+        day_index:di,
+        training:s.training,
+        food:s.food,
+        sleep:s.sleep,
+        updated_at:new Date().toISOString()
+      });
     }
     const dot=document.getElementById('saveDot');
     if(dot){dot.classList.add('visible');setTimeout(()=>dot.classList.remove('visible'),1500);}
