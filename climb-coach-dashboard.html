@@ -224,7 +224,7 @@ body{background:var(--black);color:var(--white);font-family:'Barlow Condensed',s
 const SB_URL='https://uuikrsuirncssjipnwls.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1aWtyc3Vpcm5jc3NqaXBud2xzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTk0NzgsImV4cCI6MjA5MTQ5NTQ3OH0.4wW7T9HYCL9BzRpAViygFAg9nKTxqyTZQ5IL1LDYxKY';
 const DAYS=['Mo','Tu','We','Th','Fr','Sa','Su'];
-const MAX_WEEKS=8, CLIENT_URL='https://michaelgartnerbk.github.io/climb-tracker/climb-tracker-client.html';
+const MAX_WEEKS=8, CLIENT_URL='https://tracker.climbcollective.cc/climb-tracker-client.html';
 
 let clients=[],checkins={},weeklyCheckins={},openCards={},weekOffset=0;
 let msgDuration={};// per client
@@ -246,9 +246,11 @@ function weekLabel(ws){
   return `${f(d)} – ${f(e)}`;
 }
 function getKW(ws){
-  const d=new Date(ws+'T12:00:00'),jan4=new Date(d.getFullYear(),0,4);
-  const s=new Date(jan4);s.setDate(jan4.getDate()-(jan4.getDay()===0?6:jan4.getDay()-1));
-  return Math.floor((d-s)/(7*86400000))+1;
+  const d=new Date(ws+'T12:00:00');
+  const thu=new Date(d);
+  thu.setDate(d.getDate()-(d.getDay()||7)+4);
+  const yearStart=new Date(thu.getFullYear(),0,1);
+  return Math.ceil(((thu-yearStart)/86400000+1)/7);
 }
 function lastNWeeks(n){return Array.from({length:n},(_,i)=>weekStart(-i));}
 
