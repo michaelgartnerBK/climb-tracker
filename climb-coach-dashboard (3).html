@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLIMB / Coach Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --black:#080808;--card:#181818;--border:#333;--border-light:#444;
+  --white:#f0f0f0;--muted:#999;--muted2:#bbb;
+  --green:#b8ff57;--green-dim:rgba(184,255,87,0.1);
+  --red:#ff4444;--gold:#f0d060;--blue:#7eb8ff;--radius:2px;
+}
+body{background:var(--black);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-weight:300;min-height:100vh;padding:40px 20px 80px;}
+.spinner{width:26px;height:26px;border:1px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:80px auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* HEADER */
+.header{display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:36px;animation:fadeDown 0.5s ease both;}
+.header-logo{font-size:clamp(36px,8vw,56px);font-weight:900;line-height:0.9;letter-spacing:-0.01em;}
+.header-sub{font-size:12px;font-weight:300;letter-spacing:0.35em;color:var(--muted);text-transform:uppercase;}
+.header-tag{font-size:9px;font-weight:700;letter-spacing:0.25em;color:#777;text-transform:uppercase;border:1px solid #2e2e2e;padding:3px 10px;border-radius:var(--radius);margin-top:4px;}
+.header-div{width:32px;height:1px;background:var(--border);margin-top:10px;}
+
+/* ADD CLIENT */
+.add-card{max-width:760px;margin:0 auto 28px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;animation:fadeUp 0.4s ease 0.1s both;}
+.add-title{font-size:10px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.add-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.add-input{flex:1;min-width:150px;background:#0e0e0e;border:1px solid var(--border-light);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:10px 14px;border-radius:var(--radius);outline:none;transition:border-color 0.2s;}
+.add-input:focus{border-color:var(--white);}
+.add-input::placeholder{color:#666;}
+.add-num{width:64px;background:#0e0e0e;border:1px solid var(--border-light);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;text-align:center;padding:8px 4px;border-radius:var(--radius);outline:none;}
+.add-btn{height:40px;background:transparent;border:1px solid var(--border-light);color:var(--muted2);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;padding:0 18px;border-radius:var(--radius);cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.add-btn:hover{border-color:var(--white);color:var(--white);}
+.add-btn:disabled{opacity:0.4;cursor:default;}
+
+/* WK NAV */
+.wk-nav{max-width:760px;margin:0 auto 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:fadeUp 0.4s ease 0.15s both;}
+.wk-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:20px;width:38px;height:38px;border-radius:var(--radius);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;}
+.wk-btn:hover:not(:disabled){border-color:var(--white);color:var(--white);}
+.wk-btn:disabled{opacity:0.25;cursor:default;}
+.wk-info{text-align:center;flex:1;}
+.wk-num{font-size:18px;font-weight:900;letter-spacing:0.1em;display:flex;align-items:center;justify-content:center;gap:8px;}
+.wk-badge{font-size:9px;font-weight:700;letter-spacing:0.15em;color:#777;border:1px solid #2e2e2e;padding:2px 6px;border-radius:var(--radius);}
+.wk-dates{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* CLIENT CARDS */
+.clients-grid{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px;animation:fadeUp 0.4s ease 0.2s both;}
+.client-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.client-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;gap:12px;}
+.score-ring{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.score-ring-num{font-size:13px;font-weight:900;line-height:1;}
+.client-name-el{font-size:17px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;}
+.client-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.link-btn{height:28px;border:1px solid var(--border-light);border-radius:var(--radius);padding:0 12px;background:transparent;color:var(--muted2);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.link-btn:hover{border-color:var(--white);color:var(--white);}
+.link-btn.copied{border-color:var(--green);color:var(--green);}
+.chevron{font-size:11px;color:var(--muted);transition:transform 0.2s;}
+.client-card.open .chevron{transform:rotate(180deg);}
+
+/* DETAIL */
+.client-detail{display:none;border-top:1px solid var(--border);}
+.client-card.open .client-detail{display:block;}
+
+/* TABS */
+.detail-tabs{display:flex;border-bottom:1px solid var(--border);}
+.detail-tab{flex:1;padding:9px;text-align:center;font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;border-right:1px solid var(--border);color:#888;}
+.detail-tab:last-child{border-right:none;}
+.detail-tab.active{color:var(--white);border-bottom:2px solid var(--white);}
+
+/* TAB CONTENT */
+.tab-content{padding:16px 18px;}
+
+/* DAY GRID */
+.day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:14px;}
+.day-cell{background:#0e0e0e;border-radius:var(--radius);padding:7px 3px;text-align:center;}
+.day-cell.complete{border-top:2px solid var(--white);}
+.day-cell.partial{border-top:2px solid #444;}
+.dc-name{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#999;margin-bottom:5px;}
+.dc-dot{width:6px;height:6px;border-radius:50%;margin:2px auto;}
+.dc-dot.on{background:var(--white);}
+.dc-dot.off{background:#2a2a2a;border:1px solid #404040;}
+
+/* BARS */
+.detail-bars{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
+.db-row{display:flex;align-items:center;gap:10px;}
+.db-label{font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);width:56px;}
+.db-track{flex:1;height:2px;background:#2a2a2a;border-radius:1px;overflow:hidden;}
+.db-fill{height:100%;border-radius:1px;transition:width 0.5s ease;}
+.db-pts{font-size:12px;font-weight:700;width:48px;text-align:right;}
+
+/* TREND */
+.trend-wrap{margin-bottom:4px;}
+.trend-title{font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+.trend-empty{font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#666;text-align:center;padding:28px 0;}
+
+/* HISTORY */
+.history-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #2a2a2a;}
+.history-row:last-child{border-bottom:none;}
+.history-wk{font-size:14px;font-weight:700;letter-spacing:0.1em;}
+.history-date{font-size:10px;color:#888;margin-top:2px;}
+.history-note{font-family:'Barlow',sans-serif;font-size:11px;color:#888;font-style:italic;margin-top:3px;max-width:180px;}
+.history-metrics{display:flex;align-items:center;gap:14px;}
+.hm{text-align:center;}
+.hm-val{font-size:18px;font-weight:900;color:var(--white);}
+.hm-lbl{font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:#888;margin-top:1px;}
+.history-score{font-size:26px;font-weight:900;}
+.h-bars{display:flex;gap:3px;align-items:flex-end;height:28px;}
+.h-bar{width:4px;border-radius:1px;min-height:2px;}
+
+/* CHECK-IN */
+.checkin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;}
+.metric-block{background:#0e0e0e;border:1px solid var(--border);border-radius:var(--radius);padding:13px 12px 11px;}
+.metric-lbl{font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.metric-input{width:100%;background:transparent;border:none;outline:none;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;color:var(--white);letter-spacing:-0.01em;padding:0;}
+.metric-input::placeholder{color:#222;}
+.metric-unit{font-size:12px;font-weight:300;color:#888;margin-left:2px;}
+.metric-prev{font-size:9px;letter-spacing:0.08em;color:#444;margin-top:6px;border-top:1px solid #2a2a2a;padding-top:5px;}
+
+.slider-block{background:#0e0e0e;border:1px solid var(--border);border-radius:var(--radius);padding:13px 12px 13px;}
+.slider-val{font-size:32px;font-weight:900;color:var(--white);line-height:1;}
+.slider-max{font-size:12px;font-weight:300;color:#666;display:inline;}
+.slider-track{height:2px;background:#2a2a2a;border-radius:1px;margin:10px 0 8px;overflow:hidden;}
+.slider-fill{height:100%;background:var(--white);border-radius:1px;transition:width 0.2s;}
+.slider-dots{display:flex;justify-content:space-between;}
+.sdot{width:5px;height:5px;border-radius:50%;cursor:pointer;transition:background 0.15s;}
+.sdot.on{background:var(--white);}
+.sdot.off{background:#2a2a2a;border:1px solid #363636;}
+
+.note-block{background:#0e0e0e;border:1px solid var(--border);border-radius:var(--radius);padding:13px 12px;margin-bottom:14px;}
+.note-ta{width:100%;background:transparent;border:none;outline:none;font-family:'Barlow',sans-serif;font-size:13px;color:#888;line-height:1.6;font-weight:300;resize:none;min-height:80px;}
+.note-ta::placeholder{color:#3a3a3a;}
+
+/* COACH MESSAGE SECTION */
+.msg-block{background:#0e0e0e;border:1px solid var(--border);border-radius:var(--radius);padding:13px 12px;margin-bottom:14px;}
+.msg-ta{width:100%;background:transparent;border:none;outline:none;font-family:'Barlow',sans-serif;font-size:13px;color:#888;line-height:1.6;font-weight:300;resize:none;min-height:60px;}
+.msg-ta::placeholder{color:#3a3a3a;}
+.msg-dur{display:flex;gap:6px;margin-top:10px;}
+.dur-btn{flex:1;height:30px;background:transparent;border:1px solid var(--border);border-radius:var(--radius);color:#999;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;}
+.dur-btn:hover,.dur-btn.active{border-color:var(--white);color:var(--white);}
+
+.save-btn{width:100%;height:38px;background:transparent;border:1px solid var(--border-light);border-radius:var(--radius);color:var(--muted2);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;margin-top:4px;}
+.save-btn:hover{border-color:var(--white);color:var(--white);}
+
+.del-btn{background:none;border:1px solid #363636;color:#888;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;padding:6px 14px;border-radius:var(--radius);cursor:pointer;transition:all 0.15s;margin-top:14px;}
+.del-btn:hover{border-color:var(--red);color:var(--red);}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px;letter-spacing:0.15em;text-transform:uppercase;}
+.sum-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.sum-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+.sum-card{background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:13px 13px 11px;}
+.sum-card.hi{border-color:#f0f0f0;}
+.sum-card.lo{border-color:#444;}
+.sc-lbl{font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:7px;}
+.sc-lbl.hi{color:#f0f0f0;}
+.sc-val{font-size:44px;font-weight:900;line-height:1;letter-spacing:-0.02em;}
+.sc-sub{font-size:12px;font-weight:300;color:#888;}
+.sc-delta{font-size:10px;letter-spacing:0.08em;color:#999;margin-top:5px;}
+.sc-delta.up{color:#b8ff57;}
+.sc-delta.dn{color:#ff5555;}
+.sc-name{font-size:13px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:#f0f0f0;margin-bottom:6px;}
+.sc-bar{height:2px;background:#242424;border-radius:1px;overflow:hidden;margin-bottom:5px;}
+.sc-fill{height:100%;border-radius:1px;}
+.sc-pts{font-size:11px;font-weight:700;color:#f0f0f0;}
+.sc-pts span{font-weight:300;color:#888;}
+.insights-card{background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:13px;margin-bottom:10px;}
+.insight-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:9px;}
+.insight-row:last-child{margin-bottom:0;}
+.idot{width:5px;height:5px;border-radius:50%;background:#444;flex-shrink:0;margin-top:5px;}
+.itext{font-family:'Barlow',sans-serif;font-size:13px;color:#777;line-height:1.5;font-weight:300;}
+.itext strong{font-family:'Barlow Condensed',sans-serif;font-weight:700;color:#f0f0f0;font-size:13px;letter-spacing:0.05em;}
+.prev-note{background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:13px;}
+.pn-lbl{font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:7px;display:flex;align-items:center;gap:5px;}
+.pn-dot{width:4px;height:4px;border-radius:50%;background:#444;}
+.pn-text{font-family:'Barlow',sans-serif;font-size:13px;color:#999;line-height:1.6;font-weight:300;font-style:italic;}
+.gen-btn{width:100%;height:44px;background:transparent;border:1px solid #3a3a3a;border-radius:2px;color:var(--muted2);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.gen-btn:hover{border-color:var(--white);color:var(--white);}
+/* SUMMARY */
+.sum-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.sum-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;}
+.sum-card{background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:13px 12px;}
+.sum-card.best{border-color:#f0f0f0;}
+.sum-lbl{font-size:9px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#888;margin-bottom:7px;}
+.sum-val{font-size:40px;font-weight:900;line-height:1;letter-spacing:-0.02em;color:var(--white);}
+.sum-unit{font-size:12px;font-weight:300;color:#888;}
+.sum-delta{font-size:10px;color:#999;margin-top:5px;letter-spacing:0.08em;}
+.sum-delta.up{color:var(--green);}
+.sum-delta.down-good{color:var(--green);}
+.sum-delta.down-bad{color:var(--red);}
+.sum-bar{height:2px;background:#242424;border-radius:1px;overflow:hidden;margin:6px 0 4px;}
+.sum-fill{height:100%;border-radius:1px;background:var(--white);}
+.sum-pts{font-size:11px;font-weight:700;color:var(--white);}
+.sum-pts span{font-weight:300;color:#666;}
+.insight-card{background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:13px 12px;margin-bottom:10px;}
+.insight-lbl{font-size:9px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#888;margin-bottom:10px;}
+.insight-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:8px;}
+.insight-row:last-child{margin-bottom:0;}
+.i-dot{width:4px;height:4px;border-radius:50%;background:#555;flex-shrink:0;margin-top:6px;}
+.i-txt{font-family:'Barlow',sans-serif;font-size:13px;color:#777;line-height:1.5;font-weight:300;}
+.i-txt strong{font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--white);font-size:13px;letter-spacing:0.05em;}
+.prev-note{background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:13px 12px;}
+.pn-lbl{font-size:9px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#888;margin-bottom:7px;display:flex;align-items:center;gap:5px;}
+.pn-dot{width:4px;height:4px;border-radius:50%;background:#333;}
+.pn-txt{font-family:'Barlow',sans-serif;font-size:13px;color:#999;line-height:1.6;font-weight:300;font-style:italic;}
+.gen-btn{width:100%;height:42px;background:transparent;border:1px solid #3a3a3a;border-radius:2px;color:var(--muted2);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;}
+.gen-btn:hover{border-color:var(--white);color:var(--white);}
+</style>
+</head>
+<body>
+<header style="display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:36px;animation:fadeDown 0.5s ease both;">
+  <div style="font-size:clamp(36px,8vw,56px);font-weight:900;line-height:0.9;letter-spacing:-0.01em;">CLIMB</div>
+  <div style="font-size:12px;font-weight:300;letter-spacing:0.35em;color:var(--muted);text-transform:uppercase;">/ Collective</div>
+  <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;color:#777;text-transform:uppercase;border:1px solid #2e2e2e;padding:3px 10px;border-radius:2px;margin-top:4px;">Coach Dashboard</div>
+  <div style="width:32px;height:1px;background:var(--border);margin-top:10px;"></div>
+</header>
+
+<div id="app"><div class="spinner"></div></div>
+
+<script>
+const SB_URL='https://uuikrsuirncssjipnwls.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1aWtyc3Vpcm5jc3NqaXBud2xzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MTk0NzgsImV4cCI6MjA5MTQ5NTQ3OH0.4wW7T9HYCL9BzRpAViygFAg9nKTxqyTZQ5IL1LDYxKY';
+const DAYS=['Mo','Tu','We','Th','Fr','Sa','Su'];
+const MAX_WEEKS=8, CLIENT_URL='https://michaelgartnerbk.github.io/climb-tracker/climb-tracker-client.html';
+
+let clients=[],checkins={},weeklyCheckins={},openCards={},weekOffset=0;
+let msgDuration={};// per client
+
+function weekStart(offset=0){
+  const d=new Date(),day=d.getDay(),dfm=(day+6)%7;
+  d.setDate(d.getDate()-dfm+offset*7);d.setHours(0,0,0,0);
+  return d.toISOString().split('T')[0];
+}
+function weekLabel(ws){
+  const d=new Date(ws+'T00:00:00'),e=new Date(ws+'T00:00:00');e.setDate(e.getDate()+6);
+  const f=x=>x.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit'});
+  return `${f(d)} – ${f(e)}`;
+}
+function getKW(ws){
+  const d=new Date(ws+'T00:00:00'),jan4=new Date(d.getFullYear(),0,4);
+  const s=new Date(jan4);s.setDate(jan4.getDate()-(jan4.getDay()===0?6:jan4.getDay()-1));
+  return Math.floor((d-s)/(7*86400000))+1;
+}
+function lastNWeeks(n){return Array.from({length:n},(_,i)=>weekStart(-i));}
+
+async function api(path,method='GET',body=null){
+  const res=await fetch(`${SB_URL}/rest/v1/${path}`,{
+    method,
+    headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json',
+      'Prefer':method==='POST'?'resolution=merge-duplicates,return=representation':'return=representation'},
+    body:body?JSON.stringify(body):null
+  });
+  const t=await res.text();return t?JSON.parse(t):null;
+}
+
+async function load(){
+  try{
+    clients=await api('clients?select=*&order=created_at.asc')||[];
+    const oldest=weekStart(-(MAX_WEEKS-1));
+    const all=await api(`checkins?week_start=gte.${oldest}&select=*`)||[];
+    checkins={};
+    all.forEach(c=>{
+      if(!checkins[c.client_id]) checkins[c.client_id]={};
+      if(!checkins[c.client_id][c.week_start]) checkins[c.client_id][c.week_start]={};
+      checkins[c.client_id][c.week_start][c.day_index]=c;
+    });
+    const wcs=await api(`weekly_checkins?week_start=gte.${oldest}&select=*`)||[];
+    weeklyCheckins={};
+    wcs.forEach(w=>{
+      if(!weeklyCheckins[w.client_id]) weeklyCheckins[w.client_id]={};
+      weeklyCheckins[w.client_id][w.week_start]=w;
+    });
+    render();
+  }catch(e){
+    document.getElementById('app').innerHTML=`<div style="text-align:center;padding:80px 20px;"><div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#888;">Connection error – ${e.message}</div><button onclick="load()" style="margin-top:16px;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid #333;padding:8px 20px;border-radius:2px;cursor:pointer;">Retry</button></div>`;
+  }
+}
+
+function calcScore(cid,tdays,ws){
+  const n=parseInt((tdays||['3'])[0])||3;
+  let tP=0,fP=0,sP=0;
+  const ptT=n>0?30/n:0,ptF=40/7,ptS=30/7;
+  const wd=checkins[cid]?.[ws]||{};
+  for(let i=0;i<7;i++){
+    const c=wd[i];if(!c) continue;
+    if(c.training===true) tP=Math.min(30,tP+ptT);
+    if(c.food===true) fP+=ptF;
+    if(c.sleep===true) sP+=ptS;
+  }
+  return{total:Math.round(tP+fP+sP),t:Math.round(tP),f:Math.round(fP),s:Math.round(sP)};
+}
+
+function sColor(s){
+  if(s>=85) return 'var(--green)';
+  if(s>=70) return 'var(--green)';
+  if(s>=50) return 'var(--gold)';
+  if(s>=30) return '#e87a2a';
+  return 'var(--red)';
+}
+
+function render(){
+  const cw=weekStart(weekOffset),isNow=weekOffset===0;
+  document.getElementById('app').innerHTML=`
+    <div class="add-card">
+      <div class="add-title">Add new client</div>
+      <div class="add-row">
+        <input class="add-input" id="newName" placeholder="Client name"/>
+        <input class="add-num" id="newSessions" type="number" min="1" max="7" value="3"/>
+        <button class="add-btn" onclick="addClient()">+ Add</button>
+      </div>
+    </div>
+    <div class="wk-nav">
+      <button class="wk-btn" onclick="changeWeek(-1)">‹</button>
+      <div class="wk-info">
+        <div class="wk-num">WK ${getKW(cw)} ${isNow?'<span class="wk-badge">Current</span>':''}</div>
+        <div class="wk-dates">${weekLabel(cw)}</div>
+      </div>
+      <button class="wk-btn" onclick="changeWeek(1)" ${isNow?'disabled':''}>›</button>
+    </div>
+    <div class="clients-grid"><div id="clientList"></div></div>
+  `;
+  renderClients();
+  document.getElementById('newName').addEventListener('keydown',e=>{if(e.key==='Enter') addClient();});
+}
+
+function changeWeek(d){
+  const n=weekOffset+d;
+  if(n>0||n<-(MAX_WEEKS-1)) return;
+  weekOffset=n; render();
+}
+
+function renderClients(){
+  const list=document.getElementById('clientList');
+  const cw=weekStart(weekOffset);
+  if(!clients.length){list.innerHTML='<div class="empty-state">No clients yet →</div>';return;}
+  list.innerHTML='';
+  clients.forEach(c=>{
+    const sc=calcScore(c.id,c.training_days,cw),col=sColor(sc.total);
+    const card=document.createElement('div');
+    card.className='client-card'+(openCards[c.id]?' open':'');
+    card.id=`card-${c.id}`;
+    const tab=openCards[c.id]||'week';
+    const sessions=parseInt((c.training_days||['3'])[0])||3;
+    card.innerHTML=`
+      <div class="client-header" onclick="toggleCard('${c.id}')">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="score-ring" style="border-color:${col}"><div class="score-ring-num" style="color:${col}">${sc.total}</div></div>
+          <div>
+            <div class="client-name-el">${c.name}</div>
+            <div class="client-meta">${sessions}x / week</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="link-btn" id="lb-${c.id}" onclick="event.stopPropagation();copyLink('${c.id}')">Link</button>
+          <div class="chevron">▼</div>
+        </div>
+      </div>
+      <div class="client-detail">
+        <div class="detail-tabs">
+          <div class="detail-tab ${tab==='week'?'active':''}" onclick="setTab('${c.id}','week')">This week</div>
+          <div class="detail-tab ${tab==='trend'?'active':''}" onclick="setTab('${c.id}','trend')">Trend</div>
+          <div class="detail-tab ${tab==='history'?'active':''}" onclick="setTab('${c.id}','history')">History</div>
+          <div class="detail-tab ${tab==='checkin'?'active':''}" onclick="setTab('${c.id}','checkin')">Check-in</div>
+          <div class="detail-tab ${tab==='summary'?'active':''}" onclick="setTab('${c.id}','summary')">Summary</div>
+        </div>
+        <div class="tab-content" id="tc-${c.id}">${tabContent(c,tab,cw,sc)}</div>
+        <div style="padding:0 18px 16px;"><button class="del-btn" onclick="deleteClient('${c.id}','${c.name}')">Remove client</button></div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function tabContent(c,tab,cw,sc){
+  if(tab==='week') return tabWeek(c,cw,sc);
+  if(tab==='trend') return tabTrend(c);
+  if(tab==='history') return tabHistory(c);
+  if(tab==='checkin') return tabCheckin(c,cw);
+  if(tab==='summary') return tabSummary(c,cw,sc);
+  return '';
+}
+
+function dot(val){
+  if(val===true) return `<div class="dc-dot on"></div>`;
+  return `<div class="dc-dot off"></div>`;
+}
+
+function tabWeek(c,cw,sc){
+  const wd=checkins[c.id]?.[cw]||{};
+  const n=parseInt((c.training_days||['3'])[0])||3;
+  const grid=DAYS.map((day,i)=>{
+    const ch=wd[i];
+    const tr=ch?.training,fo=ch?.food,sl=ch?.sleep;
+    const all=tr===true&&fo===true&&sl===true;
+    const any=tr===true||fo===true||sl===true;
+    return `<div class="day-cell ${all?'complete':any?'partial':''}">
+      <div class="dc-name">${day}</div>
+      ${dot(tr)}${dot(fo)}${dot(sl)}
+    </div>`;
+  }).join('');
+  const pT=Math.min(100,(sc.t/30)*100),pF=Math.min(100,(sc.f/40)*100),pS=Math.min(100,(sc.s/30)*100);
+  return `
+    <div class="day-grid">${grid}</div>
+    <div class="detail-bars">
+      <div class="db-row"><div class="db-label">Work</div><div class="db-track"><div class="db-fill" style="width:${pT}%;background:var(--white);"></div></div><div class="db-pts" style="color:var(--white);">${sc.t}<span style="color:#666;font-weight:300"> /30</span></div></div>
+      <div class="db-row"><div class="db-label">Food</div><div class="db-track"><div class="db-fill" style="width:${pF}%;background:var(--green);"></div></div><div class="db-pts" style="color:var(--green);">${sc.f}<span style="color:#666;font-weight:300"> /40</span></div></div>
+      <div class="db-row"><div class="db-label">Sleep</div><div class="db-track"><div class="db-fill" style="width:${pS}%;background:var(--blue);"></div></div><div class="db-pts" style="color:var(--blue);">${sc.s}<span style="color:#666;font-weight:300"> /30</span></div></div>
+    </div>`;
+}
+
+function tabTrend(c){
+  const weeks=lastNWeeks(MAX_WEEKS).reverse();
+  const data=weeks.map(w=>({w,s:calcScore(c.id,c.training_days,w)}));
+  const hasData=data.some(x=>x.s.total>0);
+  if(!hasData) return `<div class="trend-empty">No historical data yet</div>`;
+  const W=560,H=90,pX=20,pY=14;
+  const vals=data.map(x=>x.s.total);
+  const pts=vals.map((v,i)=>{
+    const x=pX+(i/(vals.length-1))*(W-pX*2);
+    const y=H-pY-(v/100)*(H-pY*2);
+    return [x,y];
+  });
+  const polyline=pts.map(p=>p.join(',')).join(' ');
+  const circles=pts.map(([x,y],i)=>{
+    const v=vals[i],kw=getKW(data[i].w);
+    return `<circle cx="${x}" cy="${y}" r="3.5" fill="${v>0?'#f0f0f0':'#2a2a2a'}"/><text x="${x}" y="${H}" font-size="8" fill="#444" text-anchor="middle" font-family="Barlow Condensed,sans-serif">WK${kw}</text>${v>0?`<text x="${x}" y="${y-7}" font-size="9" fill="#f0f0f0" text-anchor="middle" font-family="Barlow Condensed,sans-serif" font-weight="700">${v}</text>`:''}`;
+  }).join('');
+  return `<div class="trend-wrap"><div class="trend-title">Score – last ${MAX_WEEKS} weeks</div><svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible"><line x1="${pX}" y1="${H-pY-(70/100)*(H-pY*2)}" x2="${W-pX}" y2="${H-pY-(70/100)*(H-pY*2)}" stroke="#2a2a2a" stroke-width="1" stroke-dasharray="4,4"/><polyline points="${polyline}" fill="none" stroke="#444" stroke-width="1.5"/>${circles}</svg></div>`;
+}
+
+function tabHistory(c){
+  const weeks=lastNWeeks(MAX_WEEKS);
+  return weeks.map(w=>{
+    const s=calcScore(c.id,c.training_days,w),col=sColor(s.total),kw=getKW(w),lbl=weekLabel(w);
+    const wc=weeklyCheckins[c.id]?.[w];
+    const hT=Math.max(2,Math.round((s.t/30)*24)),hF=Math.max(2,Math.round((s.f/40)*24)),hS=Math.max(2,Math.round((s.s/30)*24));
+    return `<div class="history-row">
+      <div>
+        <div class="history-wk">WK ${kw}</div>
+        <div class="history-date">${lbl}</div>
+        ${wc?.note?`<div class="history-note">"${wc.note}"</div>`:''}
+      </div>
+      <div class="history-metrics">
+        ${wc?.weight?`<div class="hm"><div class="hm-val">${wc.weight}</div><div class="hm-lbl">kg</div></div>`:''}
+        ${wc?.energy?`<div class="hm"><div class="hm-val">${wc.energy}</div><div class="hm-lbl">Energy</div></div>`:''}
+        ${wc?.stress?`<div class="hm"><div class="hm-val">${wc.stress}</div><div class="hm-lbl">Stress</div></div>`:''}
+        ${s.total>0?`<div class="hm">
+          <div class="history-score" style="color:${col}">${s.total}</div>
+          <div class="hm-lbl">Score</div>
+        </div>`:'<div style="font-size:11px;letter-spacing:0.1em;color:#444;text-transform:uppercase;">–</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function tabCheckin(c,cw){
+  const wc=weeklyCheckins[c.id]?.[cw]||{};
+  const prevWk=weekStart(weekOffset-1);
+  const prevWc=weeklyCheckins[c.id]?.[prevWk]||{};
+  const energy=wc.energy||0, stress=wc.stress||0;
+  const dur=msgDuration[c.id]||7;
+
+  // Build slider dots
+  function sliderDots(val,id){
+    return Array.from({length:10},(_,i)=>`<div class="sdot ${i<val?'on':'off'}" onclick="setSlider('${c.id}','${id}',${i+1})"></div>`).join('');
+  }
+
+  return `
+    <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">WK ${getKW(cw)} · ${weekLabel(cw)}</div>
+    <div class="checkin-grid">
+      <div class="metric-block">
+        <div class="metric-lbl">Weight</div>
+        <div style="display:flex;align-items:baseline;gap:3px;">
+          <input class="metric-input" id="weight-${c.id}" type="number" step="0.1" placeholder="–" value="${wc.weight||''}" style="width:80px;"/>
+          <span class="metric-unit">kg</span>
+        </div>
+        ${prevWc.weight?`<div class="metric-prev">Prev: ${prevWc.weight} kg</div>`:''}
+      </div>
+      <div class="slider-block">
+        <div class="metric-lbl">Energy</div>
+        <div><span class="slider-val" id="energy-val-${c.id}">${energy||'–'}</span> <span class="slider-max">/ 10</span></div>
+        <div class="slider-track"><div class="slider-fill" id="energy-fill-${c.id}" style="width:${energy*10}%;"></div></div>
+        <div class="slider-dots" id="energy-dots-${c.id}">${sliderDots(energy,'energy')}</div>
+      </div>
+      <div class="slider-block">
+        <div class="metric-lbl">Stress</div>
+        <div><span class="slider-val" id="stress-val-${c.id}">${stress||'–'}</span> <span class="slider-max">/ 10</span></div>
+        <div class="slider-track"><div class="slider-fill" id="stress-fill-${c.id}" style="width:${stress*10}%;"></div></div>
+        <div class="slider-dots" id="stress-dots-${c.id}">${sliderDots(stress,'stress')}</div>
+      </div>
+    </div>
+    <div class="note-block">
+      <div class="metric-lbl">Coach Note</div>
+      <textarea class="note-ta" id="note-${c.id}" placeholder="Notes for this week…">${wc.note||''}</textarea>
+    </div>
+    <div class="note-block" style="margin-bottom:14px;">
+      <div class="metric-lbl">Coach Message to Client</div>
+      <textarea class="msg-ta" id="msg-${c.id}" placeholder="Message shown in client tracker…"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#888;white-space:nowrap;">Show for</div>
+        <input id="dur-${c.id}" type="number" min="1" max="90" value="${dur}" style="width:56px;background:#0e0e0e;border:1px solid var(--border-light);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;text-align:center;padding:4px;border-radius:2px;outline:none;" oninput="msgDuration['${c.id}']=parseInt(this.value)||7"/>
+        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#888;">days</div>
+      </div>
+    </div>
+    <button class="save-btn" onclick="saveCheckin('${c.id}','${cw}')">Save Check-in</button>
+  `;
+}
+
+function setSlider(cid,field,val){
+  const vEl=document.getElementById(`${field}-val-${cid}`);
+  const fEl=document.getElementById(`${field}-fill-${cid}`);
+  const dEl=document.getElementById(`${field}-dots-${cid}`);
+  if(vEl) vEl.textContent=val;
+  if(fEl) fEl.style.width=`${val*10}%`;
+  if(dEl){
+    dEl.querySelectorAll('.sdot').forEach((d,i)=>{d.className=`sdot ${i<val?'on':'off'}`;});
+  }
+  // store locally
+  if(!window._sliderVals) window._sliderVals={};
+  if(!window._sliderVals[cid]) window._sliderVals[cid]={};
+  window._sliderVals[cid][field]=val;
+}
+
+function setDur(cid,days){
+  msgDuration[cid]=days;
+  const c=clients.find(x=>x.id===cid);
+  if(!c) return;
+  const cw=weekStart(weekOffset);
+  document.getElementById(`tc-${cid}`).innerHTML=tabCheckin(c,cw);
+}
+
+async function saveCheckin(cid,ws){
+  const weight=parseFloat(document.getElementById(`weight-${cid}`)?.value)||null;
+  const note=document.getElementById(`note-${cid}`)?.value?.trim()||null;
+  const msgText=document.getElementById(`msg-${cid}`)?.value?.trim()||null;
+  const energy=window._sliderVals?.[cid]?.energy||null;
+  const stress=window._sliderVals?.[cid]?.stress||null;
+  const dur=msgDuration[cid]||7;
+
+  try{
+    await api('weekly_checkins','POST',{client_id:cid,week_start:ws,weight,energy,stress,note,updated_at:new Date().toISOString()});
+    if(msgText){
+      const exp=new Date(); exp.setDate(exp.getDate()+dur);
+      await api('coach_messages','POST',{client_id:cid,message:msgText,expires_at:exp.toISOString().split('T')[0]});
+    }
+    await load();
+  }catch(e){alert('Error saving: '+e.message);}
+}
+
+
+function tabSummary(c,cw,sc){
+  // Show generate button first – user clicks when data is ready
+  return `
+    <div style="padding:20px 0 4px;">
+      <button class="gen-btn" onclick="generateSummary('${c.id}','${cw}')">Generate Summary</button>
+      <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#666;text-align:center;margin-top:10px;">Click when all data for the week is complete</div>
+    </div>
+    <div id="sum-content-${c.id}"></div>
+  `;
+}
+
+function generateSummary(cid,cw){
+  const c=clients.find(x=>x.id===cid); if(!c) return;
+  const sc=calcScore(cid,c.training_days,cw);
+  const prevWk=weekStart(weekOffset-1);
+  const scPrev=calcScore(cid,c.training_days,prevWk);
+  const wd=checkins[cid]?.[cw]||{};
+  const wc=weeklyCheckins[cid]?.[cw]||{};
+  const prevWc=weeklyCheckins[cid]?.[prevWk]||{};
+  const n=parseInt((c.training_days||['3'])[0])||3;
+  const kw=getKW(cw);
+
+  // Streak
+  const weeks={};
+  Object.entries(checkins[cid]||{}).forEach(([w,data])=>weeks[w]=data);
+  const sorted=Object.keys(weeks).sort().reverse();
+  let streak=0;
+  for(const w of sorted){
+    const s=calcScore(cid,c.training_days,w);
+    if(s.total>=70) streak++; else break;
+  }
+
+  // Delta score
+  const delta=sc.total-scPrev.total;
+  const deltaStr=delta>0?`<span class="sum-delta up">↑ +${delta} vs WK ${getKW(prevWk)}</span>`
+    :delta<0?`<span class="sum-delta down-bad">↓ ${delta} vs WK ${getKW(prevWk)}</span>`
+    :`<span class="sum-delta">= same as WK ${getKW(prevWk)}</span>`;
+
+  // Best/worst category
+  const cats=[{name:'Work',val:sc.t,max:30},{name:'Food',val:sc.f,max:40},{name:'Sleep',val:sc.s,max:30}];
+  cats.sort((a,b)=>(b.val/b.max)-(a.val/a.max));
+  const best=cats[0], worst=cats[cats.length-1];
+
+  // Consistency
+  let completeDays=0, partialDays=0;
+  for(let i=0;i<7;i++){
+    const ch=wd[i]; if(!ch) continue;
+    const hasTr=n>0; // any day can have training
+    const allDone=ch.training===true&&ch.food===true&&ch.sleep===true;
+    const anyDone=ch.training===true||ch.food===true||ch.sleep===true;
+    if(anyDone&&!allDone) partialDays++;
+    if(allDone) completeDays++;
+  }
+
+  // Weight delta
+  let weightHtml='';
+  if(wc.weight){
+    const diff=prevWc.weight?(wc.weight-prevWc.weight).toFixed(1):null;
+    const dir=diff&&diff<0?'down-good':diff&&diff>0?'down-bad':'';
+    const arrow=diff&&diff<0?'↓':diff&&diff>0?'↑':'=';
+    weightHtml=`<div class="sum-card">
+      <div class="sum-lbl">Weight</div>
+      <div><span class="sum-val">${wc.weight}</span><span class="sum-unit"> kg</span></div>
+      ${diff?`<div class="sum-delta ${dir}">${arrow} ${Math.abs(diff)} kg vs WK ${getKW(prevWk)}</div>`:''}
+    </div>`;
+  }
+  const energyHtml=wc.energy?`<div class="sum-card">
+    <div class="sum-lbl">Energy</div>
+    <div><span class="sum-val">${wc.energy}</span><span class="sum-unit"> / 10</span></div>
+    ${prevWc.energy?`<div class="sum-delta ${wc.energy>=prevWc.energy?'up':'down-bad'}">${wc.energy>=prevWc.energy?'↑':'↓'} vs ${prevWc.energy} last week</div>`:''}
+  </div>`:'';
+  const stressHtml=wc.stress?`<div class="sum-card">
+    <div class="sum-lbl">Stress</div>
+    <div><span class="sum-val">${wc.stress}</span><span class="sum-unit"> / 10</span></div>
+    ${prevWc.stress?`<div class="sum-delta ${wc.stress<=prevWc.stress?'up':'down-bad'}">${wc.stress<=prevWc.stress?'↓ less':'↑ more'} vs ${prevWc.stress} last week</div>`:''}
+  </div>`:'';
+
+  // Auto insights
+  const insights=[];
+  // Sleep pattern
+  if(worst.name==='Sleep'&&(sc.s/30)<0.5) insights.push(`<strong>Sleep is the gap.</strong> Only ${sc.s}/30 – worth addressing directly in this call.`);
+  // Score trend
+  if(delta>10) insights.push(`<strong>Strong improvement</strong> – up ${delta} points vs last week. Ask what worked.`);
+  else if(delta<-10) insights.push(`<strong>Score dropped ${Math.abs(delta)} points.</strong> Explore what got in the way.`);
+  // Energy vs Stress
+  if(wc.energy&&wc.stress){
+    if(wc.stress>=7&&sc.total<50) insights.push(`<strong>High stress, low score</strong> – external pressure likely the cause, not motivation.`);
+    if(wc.energy>=8&&sc.total>=70) insights.push(`<strong>Energy high, score strong</strong> – client is in a good rhythm. Reinforce.`);
+  }
+  // Streak
+  if(streak>=3) insights.push(`<strong>${streak}-week streak</strong> above 70 – momentum is real. Acknowledge it.`);
+  // Consistency
+  if(partialDays>=3) insights.push(`<strong>${partialDays} started-but-incomplete days</strong> – pattern of starting but not finishing. Explore barriers.`);
+  // Weight
+  if(wc.weight&&prevWc.weight&&(wc.weight-prevWc.weight)<-0.3) insights.push(`<strong>Weight trending down</strong> – ${Math.abs((wc.weight-prevWc.weight).toFixed(1))} kg this week. On track.`);
+
+  // Prev note
+  const prevNote=prevWc.note?`<div class="prev-note"><div class="pn-lbl"><div class="pn-dot"></div>Your note · WK ${getKW(prevWk)}</div><div class="pn-txt">${prevWc.note}</div></div>`:'';
+
+  const html=`
+    <div style="margin-top:16px;">
+      <div class="sum-grid2">
+        <div class="sum-card">
+          <div class="sum-lbl">Score · WK ${kw}</div>
+          <div><span class="sum-val" style="color:${sColor(sc.total)}">${sc.total}</span><span class="sum-unit"> / 100</span></div>
+          ${deltaStr}
+        </div>
+        <div class="sum-card">
+          <div class="sum-lbl">Streak</div>
+          <div><span class="sum-val">${streak||'—'}</span><span class="sum-unit">${streak?' weeks':''}</span></div>
+          ${streak>=3?`<div class="sum-delta up">↑ Personal best</div>`:''}
+        </div>
+      </div>
+      <div class="sum-grid3">
+        <div class="sum-card best">
+          <div class="sum-lbl" style="color:var(--white);">Strongest</div>
+          <div style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">${best.name}</div>
+          <div class="sum-bar"><div class="sum-fill" style="width:${Math.min(100,(best.val/best.max)*100)}%;"></div></div>
+          <div class="sum-pts">${best.val} <span>/ ${best.max}</span></div>
+        </div>
+        <div class="sum-card" style="opacity:0.7;">
+          <div class="sum-lbl">Mid</div>
+          <div style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;">${cats[1].name}</div>
+          <div class="sum-bar"><div class="sum-fill" style="width:${Math.min(100,(cats[1].val/cats[1].max)*100)}%;background:#555;"></div></div>
+          <div class="sum-pts" style="color:#999;">${cats[1].val} <span>/ ${cats[1].max}</span></div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-lbl">Weakest</div>
+          <div style="font-size:13px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;color:#999;">${worst.name}</div>
+          <div class="sum-bar"><div class="sum-fill" style="width:${Math.min(100,(worst.val/worst.max)*100)}%;background:#333;"></div></div>
+          <div class="sum-pts" style="color:#888;">${worst.val} <span>/ ${worst.max}</span></div>
+        </div>
+      </div>
+      <div class="sum-grid3" style="margin-bottom:10px;">
+        <div class="sum-card">
+          <div class="sum-lbl">Complete Days</div>
+          <div><span class="sum-val">${completeDays}</span><span class="sum-unit"> / 7</span></div>
+          <div class="sum-delta">All 3 done</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-lbl">Partial Days</div>
+          <div><span class="sum-val" style="color:#999;">${partialDays}</span><span class="sum-unit"> / 7</span></div>
+          <div class="sum-delta">Started, not finished</div>
+        </div>
+        <div class="sum-card">
+          <div class="sum-lbl">Empty Days</div>
+          <div><span class="sum-val" style="color:#666;">${7-completeDays-partialDays}</span><span class="sum-unit"> / 7</span></div>
+        </div>
+      </div>
+      ${(weightHtml||energyHtml||stressHtml)?`<div class="sum-grid3" style="margin-bottom:10px;">${weightHtml}${energyHtml}${stressHtml}</div>`:''}
+      ${insights.length?`<div class="insight-card"><div class="insight-lbl">Key Insights</div>${insights.map(t=>`<div class="insight-row"><div class="i-dot"></div><div class="i-txt">${t}</div></div>`).join('')}</div>`:''}
+      ${prevNote}
+    </div>
+  `;
+
+  const el=document.getElementById(`sum-content-${cid}`);
+  if(el) el.innerHTML=html;
+}
+
+
+function tabSummary(c,cw,sc){
+  const prevWs = weekStart(-1);
+  const prevSc = calcScore(c.id, c.training_days, prevWs);
+  const delta = sc.total - prevSc.total;
+  const deltaStr = delta>0?`+${delta}`:`${delta}`;
+  const deltaCol = delta>=0?'var(--green)':'var(--red)';
+
+  // Streak
+  const weeks={};
+  Object.entries(checkins[c.id]||{}).forEach(([ws,wd])=>{weeks[ws]=wd;});
+  const sorted=Object.keys(weeks).sort().reverse();
+  let streak=0;
+  for(const ws of sorted){
+    const s=calcScore(c.id,c.training_days,ws);
+    if(s.total>=70) streak++;
+    else break;
+  }
+
+  // Best/worst category
+  const cats=[
+    {name:'WORK',val:sc.t,max:30},
+    {name:'FOOD',val:sc.f,max:40},
+    {name:'SLEEP',val:sc.s,max:30}
+  ];
+  const pcts=cats.map(x=>({...x,pct:x.max>0?x.val/x.max:0}));
+  const best=pcts.reduce((a,b)=>a.pct>=b.pct?a:b);
+  const worst=pcts.reduce((a,b)=>a.pct<=b.pct?a:b);
+
+  // Consistency
+  const wd=checkins[c.id]?.[cw]||{};
+  let complete=0, partial=0;
+  for(let i=0;i<7;i++){
+    const d=wd[i]; if(!d) continue;
+    const filled=[d.training===true,d.food===true,d.sleep===true].filter(Boolean).length;
+    if(filled===3) complete++;
+    else if(filled>0) partial++;
+  }
+
+  // Weekly checkin data
+  const wc=weeklyCheckins[c.id]?.[cw]||{};
+  const prevWc=weeklyCheckins[c.id]?.[prevWs]||{};
+  const wDelta=wc.weight&&prevWc.weight?(wc.weight-prevWc.weight).toFixed(1):null;
+  const eDelta=wc.energy&&prevWc.energy?(wc.energy-prevWc.energy):null;
+  const sDelta=wc.stress&&prevWc.stress?(wc.stress-prevWc.stress):null;
+
+  // Prev note
+  const prevWc2=weeklyCheckins[c.id]?.[prevWs]||{};
+
+  // Auto insights
+  const insights=[];
+  if(worst.pct<0.5) insights.push(`<strong>${worst.name}</strong> is the gap – ${worst.val}/${worst.max}. Lowest category. Address directly.`);
+  if(wc.stress>=7&&sc.total<60) insights.push(`<strong>High stress (${wc.stress}/10)</strong> may explain the lower score – external factors at play.`);
+  if(wc.energy>=8&&sc.total>=70) insights.push(`<strong>Energy high (${wc.energy}/10)</strong> and score strong – client is in a good rhythm.`);
+  if(wDelta&&parseFloat(wDelta)<0) insights.push(`<strong>Weight trending down</strong> ${Math.abs(wDelta)} kg – on track.`);
+  if(streak>=3) insights.push(`<strong>${streak}-week streak above 70</strong> – momentum is real. Acknowledge it.`);
+  if(complete<=2) insights.push(`Only <strong>${complete} fully complete days</strong> – consistency is the issue, not motivation.`);
+  if(insights.length===0) insights.push('No significant patterns this week. Good baseline week.');
+
+  const kw=getKW(cw), prevKw=getKW(prevWs);
+
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div style="background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:14px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:8px;">Score · WK ${kw}</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-size:48px;font-weight:900;line-height:1;letter-spacing:-0.02em;color:${sColor(sc.total)};">${sc.total}</div>
+          <div style="font-size:12px;font-weight:300;color:#888;">/ 100</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:6px;">
+          <span style="font-size:11px;font-weight:700;color:${deltaCol};">${deltaStr}</span>
+          <span style="font-size:10px;letter-spacing:0.08em;color:#888;">vs WK ${prevKw} (${prevSc.total})</span>
+        </div>
+      </div>
+      <div style="background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:14px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:8px;">Streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="font-size:48px;font-weight:900;line-height:1;letter-spacing:-0.02em;color:#f0f0f0;">${streak}</div>
+          <div style="font-size:12px;font-weight:300;color:#888;">weeks ≥ 70</div>
+        </div>
+        <div style="font-size:10px;color:#888;margin-top:6px;letter-spacing:0.08em;">${streak===0?'Below 70 this week':streak===1?'First week above 70':streak+' consecutive weeks'}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div style="background:#0d0d0d;border:1px solid #f0f0f0;border-radius:2px;padding:12px;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#f0f0f0;margin-bottom:6px;">Strongest</div>
+        <div style="font-size:14px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#f0f0f0;margin-bottom:6px;">${best.name}</div>
+        <div style="height:2px;background:#242424;border-radius:1px;overflow:hidden;margin-bottom:5px;"><div style="width:${Math.round(best.pct*100)}%;height:100%;background:#f0f0f0;border-radius:1px;"></div></div>
+        <div style="font-size:11px;font-weight:700;color:#f0f0f0;">${best.val} <span style="font-weight:300;color:#888;">/ ${best.max}</span></div>
+      </div>
+      <div style="background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:12px;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#999;margin-bottom:6px;">Middle</div>
+        ${pcts.filter(x=>x.name!==best.name&&x.name!==worst.name).map(x=>`
+        <div style="font-size:14px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#666;margin-bottom:6px;">${x.name}</div>
+        <div style="height:2px;background:#242424;border-radius:1px;overflow:hidden;margin-bottom:5px;"><div style="width:${Math.round(x.pct*100)}%;height:100%;background:#555;border-radius:1px;"></div></div>
+        <div style="font-size:11px;font-weight:700;color:#666;">${x.val} <span style="font-weight:300;color:#666;">/ ${x.max}</span></div>`).join('')}
+      </div>
+      <div style="background:#0d0d0d;border:1px solid #363636;border-radius:2px;padding:12px;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#888;margin-bottom:6px;">Weakest</div>
+        <div style="font-size:14px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#999;margin-bottom:6px;">${worst.name}</div>
+        <div style="height:2px;background:#242424;border-radius:1px;overflow:hidden;margin-bottom:5px;"><div style="width:${Math.round(worst.pct*100)}%;height:100%;background:#333;border-radius:1px;"></div></div>
+        <div style="font-size:11px;font-weight:700;color:#999;">${worst.val} <span style="font-weight:300;color:#666;">/ ${worst.max}</span></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div style="background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:12px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:8px;">Complete Days</div>
+        <div style="font-size:40px;font-weight:900;line-height:1;color:#f0f0f0;">${complete} <span style="font-size:14px;font-weight:300;color:#888;">/ 7</span></div>
+        <div style="font-size:10px;color:#888;margin-top:4px;letter-spacing:0.08em;">${partial} started but incomplete</div>
+      </div>
+      <div style="background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:12px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:8px;">Body</div>
+        <div style="display:flex;gap:12px;">
+          ${wc.weight?`<div><div style="font-size:22px;font-weight:900;color:#f0f0f0;">${wc.weight}<span style="font-size:11px;font-weight:300;color:#888;"> kg</span></div><div style="font-size:9px;color:${wDelta&&parseFloat(wDelta)<0?'var(--green)':wDelta?'var(--red)':'#444'};margin-top:2px;">${wDelta?(parseFloat(wDelta)>0?'+':'')+wDelta+' kg':'–'}</div></div>`:''}
+          ${wc.energy?`<div><div style="font-size:22px;font-weight:900;color:#f0f0f0;">${wc.energy}<span style="font-size:11px;font-weight:300;color:#888;"> E</span></div><div style="font-size:9px;color:#888;margin-top:2px;">${eDelta?(eDelta>0?'+':'')+eDelta:'–'}</div></div>`:''}
+          ${wc.stress?`<div><div style="font-size:22px;font-weight:900;color:#f0f0f0;">${wc.stress}<span style="font-size:11px;font-weight:300;color:#888;"> S</span></div><div style="font-size:9px;color:#888;margin-top:2px;">${sDelta?(sDelta>0?'+':'')+sDelta:'–'}</div></div>`:''}
+          ${!wc.weight&&!wc.energy&&!wc.stress?'<div style="font-size:10px;color:#444;letter-spacing:0.1em;text-transform:uppercase;margin-top:8px;">No check-in data</div>':''}
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:10px;">Key Insights</div>
+      ${insights.map(ins=>`
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
+          <div style="width:4px;height:4px;border-radius:50%;background:#555;flex-shrink:0;margin-top:6px;"></div>
+          <div style="font-family:'Barlow',sans-serif;font-size:13px;color:#666;line-height:1.5;font-weight:300;">${ins}</div>
+        </div>`).join('')}
+    </div>
+
+    ${prevWc2.note?`
+    <div style="background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:14px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:8px;display:flex;align-items:center;gap:6px;"><div style="width:4px;height:4px;border-radius:50%;background:#444;"></div>Your note · WK ${prevKw}</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:13px;color:#999;line-height:1.6;font-weight:300;font-style:italic;">${prevWc2.note}</div>
+    </div>`:''}
+  `;
+}
+
+function setTab(cid,tab){
+  openCards[cid]=tab;
+  const c=clients.find(x=>x.id===cid);if(!c) return;
+  const cw=weekStart(weekOffset);
+  const sc=calcScore(c.id,c.training_days,cw);
+  const card=document.getElementById(`card-${cid}`);
+  card.querySelectorAll('.detail-tab').forEach((t,i)=>{
+    const tabs=['week','trend','history','checkin','summary'];
+    t.classList.toggle('active',tabs[i]===tab);
+  });
+  document.getElementById(`tc-${cid}`).innerHTML=tabContent(c,tab,cw,sc);
+}
+
+function toggleCard(id){
+  const card=document.getElementById(`card-${id}`),isOpen=card.classList.contains('open');
+  card.classList.toggle('open');
+  if(!isOpen&&!openCards[id]) openCards[id]='week';
+  if(isOpen) delete openCards[id];
+}
+
+function copyLink(id){
+  const link=`${CLIENT_URL}?id=${id}`;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn=document.getElementById(`lb-${id}`);
+    if(btn){btn.textContent='✓ Copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='Link';btn.classList.remove('copied');},2000);}
+  });
+}
+
+async function addClient(){
+  const name=document.getElementById('newName')?.value?.trim();if(!name) return;
+  const sessions=parseInt(document.getElementById('newSessions')?.value)||3;
+  const btn=document.querySelector('.add-btn');btn.disabled=true;btn.textContent='…';
+  await api('clients','POST',{name,training_days:[String(sessions)]});
+  btn.disabled=false;btn.textContent='+ Add';
+  await load();
+}
+
+async function deleteClient(id,name){
+  if(!confirm(`Remove "${name}"?`)) return;
+  await api(`checkins?client_id=eq.${id}`,'DELETE');
+  await api(`weekly_checkins?client_id=eq.${id}`,'DELETE');
+  await api(`coach_messages?client_id=eq.${id}`,'DELETE');
+  await api(`clients?id=eq.${id}`,'DELETE');
+  await load();
+}
+
+
+function tabSummary(c,cw,sc){
+  const prevWk = weekStart(weekOffset-1);
+  const prevSc = calcScore(c.id,c.training_days,prevWk);
+  const wc = weeklyCheckins[c.id]?.[cw]||{};
+  const prevWc = weeklyCheckins[c.id]?.[prevWk]||{};
+  const streak = getStreak(c.id,c.training_days);
+  const prevWkLabel = weekLabel(prevWk);
+  const kwNum = getKW(cw);
+
+  return `
+    <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;">WK ${kwNum} · ${weekLabel(cw)}</div>
+      <button class="gen-btn" style="width:auto;padding:0 20px;" onclick="generateSummary('${c.id}','${cw}')">Generate Summary</button>
+    </div>
+    <div id="summary-content-${c.id}">
+      <div style="text-align:center;padding:40px 20px;color:#444;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;">Click Generate Summary when all data is in</div>
+    </div>`;
+}
+
+function getStreak(cid,tdays){
+  const weeks={};
+  Object.entries(checkins[cid]||{}).forEach(([ws,wd])=>{ weeks[ws]=wd; });
+  const sorted=Object.keys(weeks).sort().reverse();
+  let streak=0;
+  for(const ws of sorted){
+    const s=calcScore(cid,tdays,ws);
+    if(s.total>=70) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function generateSummary(cid,cw){
+  const c=clients.find(x=>x.id===cid); if(!c) return;
+  const sc=calcScore(c.id,c.training_days,cw);
+  const prevWk=weekStart(weekOffset-1);
+  const prevSc=calcScore(c.id,c.training_days,prevWk);
+  const wc=weeklyCheckins[c.id]?.[cw]||{};
+  const prevWc=weeklyCheckins[c.id]?.[prevWk]||{};
+  const streak=getStreak(cid,c.training_days);
+  const wd=checkins[cid]?.[cw]||{};
+
+  // Score delta
+  const delta=sc.total-prevSc.total;
+  const deltaStr=delta===0?'Same as last week':`${delta>0?'+':''}${delta} vs WK ${getKW(prevWk)} (${prevSc.total})`;
+  const deltaCol=delta>0?'up':delta<0?'dn':'';
+
+  // Categories
+  const cats=[
+    {name:'Work',pts:sc.t,max:30},
+    {name:'Food',pts:sc.f,max:40},
+    {name:'Sleep',pts:sc.s,max:30}
+  ];
+  const sorted=[...cats].sort((a,b)=>(b.pts/b.max)-(a.pts/a.max));
+  const best=sorted[0], worst=sorted[2];
+
+  // Consistency
+  let complete=0,partial=0;
+  for(let i=0;i<7;i++){
+    const d=wd[i];
+    if(!d) continue;
+    const cnt=[d.training,d.food,d.sleep].filter(x=>x===true).length;
+    if(cnt===3) complete++;
+    else if(cnt>0) partial++;
+  }
+
+  // Weight delta
+  const wDelta=wc.weight&&prevWc.weight?Math.round((wc.weight-prevWc.weight)*10)/10:null;
+
+  // Energy/Stress deltas
+  const eDelta=wc.energy&&prevWc.energy?wc.energy-prevWc.energy:null;
+  const sDelta=wc.stress&&prevWc.stress?wc.stress-prevWc.stress:null;
+
+  // Generate insights
+  const insights=[];
+
+  // Sleep pattern
+  const weeks8=lastNWeeks(8);
+  const sleepWeak=weeks8.filter(w=>calcScore(cid,c.training_days,w).s<15).length;
+  if(sc.s<15 && sleepWeak>=3) insights.push(`<strong>Sleep is the recurring gap.</strong> Below 50% for ${sleepWeak} of the last 8 weeks. Address directly.`);
+  else if(worst.name==='Sleep') insights.push(`<strong>Sleep weakest category this week.</strong> ${sc.s}/${worst.max} – good topic to explore.`);
+
+  // Stress vs score
+  if(wc.stress>=7 && sc.total<60) insights.push(`<strong>High stress, lower score.</strong> External pressure likely the cause – worth separating from discipline.`);
+  else if(wc.stress<=3 && sc.total>=70) insights.push(`<strong>Low stress + strong score.</strong> Client in a good rhythm – reinforce the habits.`);
+
+  // Energy
+  if(eDelta!==null && eDelta>=2) insights.push(`<strong>Energy up ${eDelta} points</strong> from last week – client is feeling the progress.`);
+  if(eDelta!==null && eDelta<=-2) insights.push(`<strong>Energy dropped ${Math.abs(eDelta)} points</strong> vs last week – check recovery and sleep quality.`);
+
+  // Weight
+  if(wDelta!==null){
+    if(wDelta<0) insights.push(`<strong>Weight down ${Math.abs(wDelta)} kg</strong> – on track. Mention it positively.`);
+    else if(wDelta>0.5) insights.push(`<strong>Weight up ${wDelta} kg</strong> – worth discussing nutrition consistency.`);
+  }
+
+  // Streak
+  if(streak>=4) insights.push(`<strong>${streak}-week streak</strong> – this is a momentum moment. Acknowledge it.`);
+
+  // Consistency
+  if(complete<=2) insights.push(`<strong>Only ${complete} fully complete days.</strong> Started but didn't finish – motivation or time management?`);
+
+  if(insights.length===0) insights.push(`<strong>Solid week overall.</strong> Keep the conversation forward-focused.`);
+
+  // Previous note
+  const prevNote=weeklyCheckins[c.id]?.[prevWk]?.note||null;
+
+  const el=document.getElementById(`summary-content-${cid}`);
+  if(!el) return;
+  el.innerHTML=`
+    <div class="sum-grid2">
+      <div class="sum-card">
+        <div class="sc-lbl">Score · WK ${getKW(cw)}</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div class="sc-val" style="color:${sColor(sc.total)}">${sc.total}</div>
+          <div class="sc-sub">/ 100</div>
+        </div>
+        <div class="sc-delta ${deltaCol}">${delta>0?'↑':delta<0?'↓':'→'} ${deltaStr}</div>
+      </div>
+      ${streak>0?`<div class="sum-card">
+        <div class="sc-lbl">Streak</div>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div class="sc-val">${streak}</div>
+          <div class="sc-sub">weeks</div>
+        </div>
+        <div class="sc-delta up">≥ 70 pts consecutive</div>
+      </div>`:`<div class="sum-card" style="display:flex;align-items:center;justify-content:center;">
+        <div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#444;">No streak yet</div>
+      </div>`}
+    </div>
+    <div class="sum-grid3">
+      <div class="sum-card ${best===sorted[0]?'hi':''}">
+        <div class="sc-lbl ${best===sorted[0]?'hi':''}">Strongest</div>
+        <div class="sc-name">${best.name}</div>
+        <div class="sc-bar"><div class="sc-fill" style="width:${Math.min(100,(best.pts/best.max)*100)}%;background:#f0f0f0;"></div></div>
+        <div class="sc-pts">${best.pts} <span>/ ${best.max}</span></div>
+      </div>
+      <div class="sum-card">
+        <div class="sc-lbl">Middle</div>
+        <div class="sc-name">${sorted[1].name}</div>
+        <div class="sc-bar"><div class="sc-fill" style="width:${Math.min(100,(sorted[1].pts/sorted[1].max)*100)}%;background:#555;"></div></div>
+        <div class="sc-pts" style="color:#666;">${sorted[1].pts} <span>/ ${sorted[1].max}</span></div>
+      </div>
+      <div class="sum-card lo">
+        <div class="sc-lbl">Weakest</div>
+        <div class="sc-name" style="color:#999;">${worst.name}</div>
+        <div class="sc-bar"><div class="sc-fill" style="width:${Math.min(100,(worst.pts/worst.max)*100)}%;background:#333;"></div></div>
+        <div class="sc-pts" style="color:#888;">${worst.pts} <span>/ ${worst.max}</span></div>
+      </div>
+    </div>
+    <div class="sum-grid2" style="margin-bottom:10px;">
+      <div class="sum-card">
+        <div class="sc-lbl">Complete Days</div>
+        <div style="display:flex;align-items:baseline;gap:6px;">
+          <div class="sc-val" style="font-size:40px;">${complete}</div>
+          <div class="sc-sub">/ 7</div>
+        </div>
+        <div class="sc-delta">${partial} started but incomplete</div>
+      </div>
+      <div class="sum-grid3" style="margin-bottom:0;">
+        ${wc.weight?`<div class="sum-card" style="padding:11px 12px;">
+          <div class="sc-lbl">Weight</div>
+          <div><span style="font-size:28px;font-weight:900;color:#f0f0f0;">${wc.weight}</span><span class="sc-sub"> kg</span></div>
+          ${wDelta!==null?`<div class="sc-delta ${wDelta<0?'up':'dn'}">${wDelta<0?'↓':'↑'} ${Math.abs(wDelta)} kg</div>`:''}
+        </div>`:''}
+        ${wc.energy?`<div class="sum-card" style="padding:11px 12px;">
+          <div class="sc-lbl">Energy</div>
+          <div><span style="font-size:28px;font-weight:900;color:#f0f0f0;">${wc.energy}</span><span class="sc-sub"> /10</span></div>
+          ${eDelta!==null?`<div class="sc-delta ${eDelta>0?'up':'dn'}">${eDelta>0?'↑':'↓'} ${Math.abs(eDelta)} pts</div>`:''}
+        </div>`:''}
+        ${wc.stress?`<div class="sum-card" style="padding:11px 12px;">
+          <div class="sc-lbl">Stress</div>
+          <div><span style="font-size:28px;font-weight:900;color:#f0f0f0;">${wc.stress}</span><span class="sc-sub"> /10</span></div>
+          ${sDelta!==null?`<div class="sc-delta ${sDelta<0?'up':'dn'}">${sDelta<0?'↓':'↑'} ${Math.abs(sDelta)} pts</div>`:''}
+        </div>`:''}
+      </div>
+    </div>
+    <div class="insights-card">
+      <div class="sc-lbl" style="margin-bottom:12px;">Key Insights</div>
+      ${insights.map(i=>`<div class="insight-row"><div class="idot"></div><div class="itext">${i}</div></div>`).join('')}
+    </div>
+    ${prevNote?`<div class="prev-note">
+      <div class="pn-lbl"><div class="pn-dot"></div>Your note · WK ${getKW(prevWk)}</div>
+      <div class="pn-text">${prevNote}</div>
+    </div>`:''}
+  `;
+}
+
+load();
+setInterval(load,30000);
+</script>
+</body>
+</html>
