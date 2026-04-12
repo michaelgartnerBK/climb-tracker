@@ -115,6 +115,11 @@ const CLIENT_ID=params.get('id');
 let client=null, state=DAYS.map(()=>({training:null,food:null,sleep:null}));
 let maxSessions=3, saveTimeout=null, allCheckins=[];
 
+function localDate(){
+  const d=new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
 function weekStart(offset=0){
   const d=new Date(), day=d.getDay(), dfm=(day+6)%7;
   d.setDate(d.getDate()-dfm+offset*7); d.setHours(12,0,0,0);
@@ -166,7 +171,7 @@ async function init(){
     allCheckins=await api(`checkins?client_id=eq.${CLIENT_ID}&select=*&order=week_start.desc`)||[];
 
     // Load coach message
-    const msgs=await api(`coach_messages?client_id=eq.${CLIENT_ID}&expires_at=gte.${new Date().toISOString().split('T')[0]}&select=*&order=created_at.desc&limit=1`);
+    const msgs=await api(`coach_messages?client_id=eq.${CLIENT_ID}&expires_at=gte.${localDate()}&select=*&order=created_at.desc&limit=1`);
     const msg=msgs?.[0]||null;
 
     renderApp(msg);

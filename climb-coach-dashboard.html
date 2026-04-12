@@ -229,6 +229,11 @@ const MAX_WEEKS=8, CLIENT_URL='https://michaelgartnerbk.github.io/climb-tracker/
 let clients=[],checkins={},weeklyCheckins={},openCards={},weekOffset=0;
 let msgDuration={};// per client
 
+function localDate(){
+  const d=new Date();
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
 function weekStart(offset=0){
   const d=new Date(), day=d.getDay(), dfm=(day+6)%7;
   d.setDate(d.getDate()-dfm+offset*7); d.setHours(12,0,0,0);
@@ -545,7 +550,7 @@ async function saveCheckin(cid,ws){
     await api('weekly_checkins','POST',{client_id:cid,week_start:ws,weight,energy,stress,note,updated_at:new Date().toISOString()});
     if(msgText){
       const exp=new Date(); exp.setDate(exp.getDate()+dur);
-      await api('coach_messages','POST',{client_id:cid,message:msgText,expires_at:exp.toISOString().split('T')[0]});
+      await api('coach_messages','POST',{client_id:cid,message:msgText,expires_at:`${exp.getFullYear()}-${String(exp.getMonth()+1).padStart(2,'0')}-${String(exp.getDate()).padStart(2,'0')}`});
     }
     await load();
   }catch(e){alert('Error saving: '+e.message);}
