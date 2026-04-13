@@ -63,6 +63,14 @@ body{background:var(--black);color:var(--white);font-family:'Barlow Condensed',s
 .tbtn.disabled{background:transparent;border:1px solid #2a2a2a;color:#2a2a2a;cursor:not-allowed;}
 .save-dot{position:fixed;bottom:24px;right:24px;width:8px;height:8px;border-radius:50%;background:var(--green);opacity:0;transition:opacity 0.3s;z-index:100;box-shadow:0 0 12px var(--green);}
 .save-dot.visible{opacity:1;}
+
+.bars-col{flex:1;display:flex;flex-direction:column;justify-content:center;gap:13px;padding:18px 16px;}
+.bar-row{display:flex;flex-direction:column;gap:5px;}
+.bar-hdr{display:flex;justify-content:space-between;align-items:baseline;}
+.bar-lbl{font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#666;}
+.bar-pct{font-size:12px;font-weight:300;color:#555;}
+.bar-track{height:3px;background:#1e1e1e;border-radius:2px;overflow:hidden;}
+.bar-fill-el{height:100%;border-radius:2px;background:#444;transition:width 0.4s ease;}
 </style>
 <meta property="og:title" content="CLIMB Tracker">
 <meta property="og:description" content="Your weekly tracking link">
