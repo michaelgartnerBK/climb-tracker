@@ -228,7 +228,7 @@ function renderApp(msg){
   const verdict=getVerdict(score.total);
   const any=state.some(s=>s.training===true||s.food===true||s.sleep===true);
   const col=any?sColor(score.total):'var(--white)';
-  const isPB=isNewPB(score.total);
+  const isPB=false; // PB only shown after full week - handled separately
 
   document.getElementById('app').innerHTML=`
     <div class="hero">
