@@ -9,7 +9,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --black:#080808;--card:#181818;--border:#333;--border-mid:#606060;
-  --white:#f0f0f0;--muted:#999;--muted2:#bbb;
+  --white:#e0e0e0;--muted:#999;--muted2:#bbb;
   --green:#b8ff57;--green-dim:rgba(184,255,87,0.1);
   --red:#ff4444;--gold:#f0d060;--blue:#7eb8ff;
 }
@@ -30,22 +30,19 @@ body{background:var(--black);color:var(--white);font-family:'Barlow Condensed',s
 .streak-num{font-size:38px;font-weight:900;line-height:1;letter-spacing:-0.02em;animation:streakPop 0.6s ease 0.3s both;}
 .streak-lbl{font-size:8px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#555;margin-top:3px;}
 @keyframes streakPop{0%{opacity:0;transform:scale(0.6);}60%{transform:scale(1.18);}80%{transform:scale(0.96);}100%{opacity:1;transform:scale(1);}}
-.coach-msg{padding:13px 24px;border-bottom:1px solid var(--border);background:#0c0c0c;}
-.coach-eyebrow{font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#555;margin-bottom:7px;display:flex;align-items:center;gap:6px;}
-.coach-dot{width:5px;height:5px;border-radius:50%;background:#777;flex-shrink:0;}
-.coach-text{font-family:'Barlow',sans-serif;font-size:13px;color:#999;line-height:1.6;font-weight:300;}
-.coach-meta{font-size:9px;letter-spacing:0.1em;color:#444;text-transform:uppercase;margin-top:7px;}
-.score-strip{display:flex;border-bottom:1px solid var(--border);}
-.score-main{flex:1;padding:18px 24px;border-right:1px solid var(--border);}
+.coach-msg{padding:11px 24px;border-bottom:1px solid var(--border);background:#0c0c0c;display:flex;align-items:flex-start;gap:10px;}
+.coach-eyebrow{display:flex;align-items:center;gap:6px;flex-shrink:0;padding-top:2px;}
+.coach-dot{width:5px;height:5px;border-radius:50%;background:#666;flex-shrink:0;}
+.coach-label{font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#555;}
+.coach-text{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--white);line-height:1.4;}
+.coach-meta{font-size:9px;letter-spacing:0.1em;color:#444;text-transform:uppercase;margin-top:4px;}
+.score-strip{display:flex;align-items:stretch;border-bottom:1px solid var(--border);}
+.score-main{padding:18px 22px;border-right:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;flex-shrink:0;}
+
 .score-eyebrow{font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
 .score-num{font-size:64px;font-weight:900;line-height:1;letter-spacing:-0.02em;}
 .score-denom{font-size:13px;font-weight:300;color:#555;margin-top:-2px;}
-.score-cats{display:flex;flex-direction:column;justify-content:center;gap:10px;padding:16px 18px;min-width:100px;}
-.cat{display:flex;align-items:center;gap:6px;}
-.cat-lbl{font-size:9px;letter-spacing:0.1em;color:var(--muted);width:32px;}
-.cat-track{flex:1;height:2px;background:#2a2a2a;border-radius:1px;overflow:hidden;}
-.cat-fill{height:100%;border-radius:1px;transition:width 0.4s ease;}
-.cat-pts{font-size:11px;font-weight:700;color:var(--white);width:20px;text-align:right;}
+
 .verdict{padding:10px 24px;border-bottom:1px solid var(--border);}
 .verdict-txt{font-size:11px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;}
 .col-headers{display:grid;grid-template-columns:60px 1fr 1fr 1fr;border-bottom:1px solid var(--border);background:var(--black);position:sticky;top:0;z-index:10;}
@@ -245,17 +242,17 @@ function renderApp(msg){
         ${streak>0?`<div class="streak-block"><div class="streak-num">${streak}</div><div class="streak-lbl">Week Streak</div></div>`:''}
       </div>
     </div>
-    ${msg?`<div class="coach-msg"><div class="coach-eyebrow"><div class="coach-dot"></div>Coach</div><div class="coach-text">${msg.message}</div><div class="coach-meta">${daysAgo(msg.created_at)} · Coach</div></div>`:''}
+    ${msg?`<div class="coach-msg"><div class="coach-eyebrow"><div class="coach-dot"></div><div class="coach-label">Coach</div></div><div><div class="coach-text">${msg.message}</div><div class="coach-meta">${daysAgo(msg.created_at)} · Coach</div></div></div>`:''}
     <div class="score-strip">
       <div class="score-main">
-        <div class="score-eyebrow">Weekly Score</div>
-        <div class="score-num" style="color:${col}">${score.total}</div>
+        <div class="score-eyebrow" style="${isPB?'color:var(--white);':'color:var(--muted);'}">${isPB?'New Record':'Weekly Score'}</div>
+        <div class="score-num" style="color:${isPB?'var(--white)':col}">${score.total}</div>
         <div class="score-denom">/ 100</div>
       </div>
-      <div class="score-cats">
-        <div class="cat"><div class="cat-lbl">WRK</div><div class="cat-track"><div class="cat-fill" style="width:${Math.min(100,(score.t/30)*100)}%;background:#f0f0f0;"></div></div><div class="cat-pts">${score.t}</div></div>
-        <div class="cat"><div class="cat-lbl">FOOD</div><div class="cat-track"><div class="cat-fill" style="width:${Math.min(100,(score.f/40)*100)}%;background:var(--green);"></div></div><div class="cat-pts" style="color:var(--green)">${score.f}</div></div>
-        <div class="cat"><div class="cat-lbl">SLP</div><div class="cat-track"><div class="cat-fill" style="width:${Math.min(100,(score.s/30)*100)}%;background:var(--blue);"></div></div><div class="cat-pts" style="color:var(--blue)">${score.s}</div></div>
+      <div class="bars-col">
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Sleep</div><div class="bar-pct" id="pct-slp">${Math.round((score.s/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-slp" style="width:${Math.min(100,(score.s/30)*100)}%;${isPB?'background:var(--white);':''}"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Food</div><div class="bar-pct" id="pct-food">${Math.round((score.f/40)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-food" style="width:${Math.min(100,(score.f/40)*100)}%;${isPB?'background:var(--white);':''}"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Work</div><div class="bar-pct" id="pct-wrk">${Math.round((score.t/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-wrk" style="width:${Math.min(100,(score.t/30)*100)}%;${isPB?'background:var(--white);':''}"></div></div></div>
       </div>
     </div>
     <div class="verdict" style="background:${verdict.bg};border-bottom:1px solid var(--border);">
@@ -263,9 +260,9 @@ function renderApp(msg){
     </div>
     <div class="col-headers">
       <div class="col-h"></div>
-      <div class="col-h"><div class="col-h-main">WORK</div><div class="col-h-pct">30%</div></div>
-      <div class="col-h"><div class="col-h-main">FOOD</div><div class="col-h-pct">40%</div></div>
       <div class="col-h"><div class="col-h-main">SLEEP</div><div class="col-h-pct">30%</div></div>
+      <div class="col-h"><div class="col-h-main">FOOD</div><div class="col-h-pct">40%</div></div>
+      <div class="col-h"><div class="col-h-main">WORK</div><div class="col-h-pct">30%</div></div>
     </div>
     <div id="daysSection"></div>
   `;
@@ -292,9 +289,9 @@ function renderDays(){
     row.innerHTML=`
       <div class="day-bar" style="background:${allDone?'var(--white)':anyDone?'#444':'transparent'};"></div>
       <div class="day-lbl"><div class="day-main">${day}</div><div class="day-sub">${FULL[i].substring(0,3).toUpperCase()}</div></div>
-      <div class="day-cell">${tbtn(i,'training',s.training,trDisabled,'WORK')}</div>
-      <div class="day-cell">${tbtn(i,'food',s.food,false,'FOOD')}</div>
       <div class="day-cell">${tbtn(i,'sleep',s.sleep,false,'SLEEP')}</div>
+      <div class="day-cell">${tbtn(i,'food',s.food,false,'FOOD')}</div>
+      <div class="day-cell">${tbtn(i,'training',s.training,trDisabled,'WORK')}</div>
     `;
     container.appendChild(row);
   });
@@ -319,9 +316,18 @@ function updateScoreDisplay(){
   const any=state.some(s=>s.training===true||s.food===true||s.sleep===true);
   const el=document.querySelector('.score-num');
   if(el){el.textContent=score.total;el.style.color=any?sColor(score.total):'var(--white)';}
+  // Update rings
   const cats=[{v:score.t,m:30},{v:score.f,m:40},{v:score.s,m:30}];
-  document.querySelectorAll('.cat-fill').forEach((f,i)=>{if(cats[i]) f.style.width=Math.min(100,(cats[i].v/cats[i].m)*100)+'%';});
-  document.querySelectorAll('.cat-pts').forEach((p,i)=>{if(cats[i]) p.textContent=cats[i].v;});
+  const circles=document.querySelectorAll('.rings-wrap circle:nth-child(2)');
+  const pcts=document.querySelectorAll('.rings-wrap div[style*="font-weight:300"]');
+  const r=33, circ=2*Math.PI*r;
+  circles.forEach((c,i)=>{
+    if(cats[i]){
+      const pct=Math.min(100,(cats[i].v/cats[i].m)*100);
+      c.setAttribute('stroke-dashoffset',(circ-(pct/100)*circ).toFixed(1));
+    }
+  });
+  pcts.forEach((p,i)=>{if(cats[i]) p.textContent=Math.round((cats[i].v/cats[i].m)*100)+'%';});
   const v=getVerdict(score.total);
   const vEl=document.querySelector('.verdict-txt');
   const vStrip=document.querySelector('.verdict');
