@@ -321,20 +321,23 @@ function toggle(di,key){
 function updateScoreDisplay(){
   const score=calcScore(state);
   const any=state.some(s=>s.training===true||s.food===true||s.sleep===true);
+  // Score number
   const el=document.querySelector('.score-num');
   if(el){el.textContent=score.total;el.style.color=any?sColor(score.total):'var(--white)';}
-  // Update rings
-  const cats=[{v:score.t,m:30},{v:score.f,m:40},{v:score.s,m:30}];
-  const circles=document.querySelectorAll('.rings-wrap circle:nth-child(2)');
-  const pcts=document.querySelectorAll('.rings-wrap div[style*="font-weight:300"]');
-  const r=33, circ=2*Math.PI*r;
-  circles.forEach((c,i)=>{
-    if(cats[i]){
-      const pct=Math.min(100,(cats[i].v/cats[i].m)*100);
-      c.setAttribute('stroke-dashoffset',(circ-(pct/100)*circ).toFixed(1));
-    }
+  // Update bars
+  const bars=[
+    {id:'bar-slp',pct:'pct-slp',v:score.s,m:30},
+    {id:'bar-food',pct:'pct-food',v:score.f,m:40},
+    {id:'bar-wrk',pct:'pct-wrk',v:score.t,m:30}
+  ];
+  bars.forEach(b=>{
+    const pct=Math.min(100,(b.v/b.m)*100);
+    const bEl=document.getElementById(b.id);
+    const pEl=document.getElementById(b.pct);
+    if(bEl) bEl.style.width=pct+'%';
+    if(pEl) pEl.textContent=Math.round(pct)+'%';
   });
-  pcts.forEach((p,i)=>{if(cats[i]) p.textContent=Math.round((cats[i].v/cats[i].m)*100)+'%';});
+  // Verdict
   const v=getVerdict(score.total);
   const vEl=document.querySelector('.verdict-txt');
   const vStrip=document.querySelector('.verdict');
