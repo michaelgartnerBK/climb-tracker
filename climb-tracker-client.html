@@ -257,20 +257,15 @@ function renderApp(msg){
         <div class="score-denom">/ 100</div>
       </div>
       <div class="bars-col">
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Sleep</div><div class="bar-pct" id="pct-slp">${Math.round((score.s/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-slp" style="width:${Math.min(100,(score.s/30)*100)}%;"></div></div></div>
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Food</div><div class="bar-pct" id="pct-food">${Math.round((score.f/40)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-food" style="width:${Math.min(100,(score.f/40)*100)}%;"></div></div></div>
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Work</div><div class="bar-pct" id="pct-wrk">${Math.round((score.t/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-wrk" style="width:${Math.min(100,(score.t/30)*100)}%;"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Sleep</div><div class="bar-pct" id="pct-slp">${Math.round((score.s/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-slp" style="width:${Math.min(100,(score.s/30)*100)}%;background:#7eb8ff;"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Food</div><div class="bar-pct" id="pct-food">${Math.round((score.f/40)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-food" style="width:${Math.min(100,(score.f/40)*100)}%;background:#b8ff57;"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Work</div><div class="bar-pct" id="pct-wrk">${Math.round((score.t/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-wrk" style="width:${Math.min(100,(score.t/30)*100)}%;background:#e0e0e0;"></div></div></div>
       </div>
     </div>
     <div class="verdict" style="background:${verdict.bg};border-bottom:1px solid var(--border);">
       <div class="verdict-txt" style="color:${verdict.col}">${any?verdict.text:'Start your week →'}</div>
     </div>
-    <div class="col-headers">
-      <div class="col-h"></div>
-      <div class="col-h"><div class="col-h-main">SLEEP</div><div class="col-h-pct">30%</div></div>
-      <div class="col-h"><div class="col-h-main">FOOD</div><div class="col-h-pct">40%</div></div>
-      <div class="col-h"><div class="col-h-main">WORK</div><div class="col-h-pct">30%</div></div>
-    </div>
+
     <div id="daysSection"></div>
   `;
   renderDays();
@@ -330,11 +325,12 @@ function updateScoreDisplay(){
     {id:'bar-food',pct:'pct-food',v:score.f,m:40},
     {id:'bar-wrk',pct:'pct-wrk',v:score.t,m:30}
   ];
+  const barColors={'bar-slp':'#7eb8ff','bar-food':'#b8ff57','bar-wrk':'#e0e0e0'};
   bars.forEach(b=>{
     const pct=Math.min(100,(b.v/b.m)*100);
     const bEl=document.getElementById(b.id);
     const pEl=document.getElementById(b.pct);
-    if(bEl) bEl.style.width=pct+'%';
+    if(bEl){bEl.style.width=pct+'%';bEl.style.background=barColors[b.id]||'#e0e0e0';}
     if(pEl) pEl.textContent=Math.round(pct)+'%';
   });
   // Verdict
