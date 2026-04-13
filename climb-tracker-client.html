@@ -228,9 +228,7 @@ function renderApp(msg){
   const verdict=getVerdict(score.total);
   const any=state.some(s=>s.training===true||s.food===true||s.sleep===true);
   const col=any?sColor(score.total):'var(--white)';
-  const isPB=false; // PB only shown after full week - handled separately
-
-  document.getElementById('app').innerHTML=`
+    document.getElementById('app').innerHTML=`
     <div class="hero">
       <div class="hero-slash">/</div>
       <div class="hero-logo">CLIMB</div>
@@ -246,14 +244,14 @@ function renderApp(msg){
     ${msg?`<div class="coach-msg"><div class="coach-eyebrow"><div class="coach-dot"></div><div class="coach-label">Coach</div></div><div><div class="coach-text">${msg.message}</div><div class="coach-meta">${daysAgo(msg.created_at)} · Coach</div></div></div>`:''}
     <div class="score-strip">
       <div class="score-main">
-        <div class="score-eyebrow" style="${isPB?'color:var(--white);':'color:var(--muted);'}">${isPB?'New Record':'Weekly Score'}</div>
-        <div class="score-num" style="color:${isPB?'var(--white)':col}">${score.total}</div>
+        <div class="score-eyebrow" style="color:var(--muted);">Weekly Score</div>
+        <div class="score-num" style="color:${col}">${score.total}</div>
         <div class="score-denom">/ 100</div>
       </div>
       <div class="bars-col">
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Sleep</div><div class="bar-pct" id="pct-slp">${Math.round((score.s/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-slp" style="width:${Math.min(100,(score.s/30)*100)}%;${isPB?'background:var(--white);':''}"></div></div></div>
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Food</div><div class="bar-pct" id="pct-food">${Math.round((score.f/40)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-food" style="width:${Math.min(100,(score.f/40)*100)}%;${isPB?'background:var(--white);':''}"></div></div></div>
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Work</div><div class="bar-pct" id="pct-wrk">${Math.round((score.t/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-wrk" style="width:${Math.min(100,(score.t/30)*100)}%;${isPB?'background:var(--white);':''}"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Sleep</div><div class="bar-pct" id="pct-slp">${Math.round((score.s/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-slp" style="width:${Math.min(100,(score.s/30)*100)}%;"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Food</div><div class="bar-pct" id="pct-food">${Math.round((score.f/40)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-food" style="width:${Math.min(100,(score.f/40)*100)}%;"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Work</div><div class="bar-pct" id="pct-wrk">${Math.round((score.t/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-wrk" style="width:${Math.min(100,(score.t/30)*100)}%;"></div></div></div>
       </div>
     </div>
     <div class="verdict" style="background:${verdict.bg};border-bottom:1px solid var(--border);">
