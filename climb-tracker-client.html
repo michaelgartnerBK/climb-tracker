@@ -96,8 +96,10 @@ const DAYS=['Mo','Tu','We','Th','Fr','Sa','Su'];
 const FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const params=new URLSearchParams(location.search);
 const urlId=params.get('id');
-if(urlId) localStorage.setItem('climb_client_id', urlId);
-const CLIENT_ID=urlId||localStorage.getItem('climb_client_id');
+function setCookie(name,value,days){const e=new Date();e.setDate(e.getDate()+days);document.cookie=`${name}=${value};expires=${e.toUTCString()};path=/;SameSite=Lax`;}
+function getCookie(name){return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(name+'='))?.split('=')[1]||null;}
+if(urlId){setCookie('climb_client_id',urlId,365);localStorage.setItem('climb_client_id',urlId);}
+const CLIENT_ID=urlId||getCookie('climb_client_id')||localStorage.getItem('climb_client_id');
 
 // currentWS is set ONCE at init - never recalculated during session
 let clientData=null, state=DAYS.map(()=>({training:null,food:null,sleep:null}));
