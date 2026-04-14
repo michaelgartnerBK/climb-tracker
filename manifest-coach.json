@@ -1,0 +1,14 @@
+{
+  "name": "CLIMB Coach",
+  "short_name": "CLIMB Coach",
+  "description": "Coach Dashboard – CLIMB Collective",
+  "start_url": "/climb-coach-dashboard.html",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -77,13 +77,6 @@ body{background:var(--black);color:var(--white);font-family:'Barlow Condensed',s
 <meta property="og:image" content="https://tracker.climbcollective.cc/logo.png">
 <meta property="og:url" content="https://tracker.climbcollective.cc">
 <meta property="og:type" content="website">
-<link rel="apple-touch-icon" href="/icon.png">
-<link rel="manifest" href="/manifest.json">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="CLIMB">
-<meta name="theme-color" content="#080808">
 </head>
 <body>
 <div id="app"><div class="status-screen"><div class="spinner"></div><div class="status-label">Loading…</div></div></div>
@@ -94,7 +87,9 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const DAYS=['Mo','Tu','We','Th','Fr','Sa','Su'];
 const FULL=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const params=new URLSearchParams(location.search);
-const CLIENT_ID=params.get('id');
+const urlId=params.get('id');
+if(urlId) localStorage.setItem('climb_client_id', urlId);
+const CLIENT_ID=urlId||localStorage.getItem('climb_client_id');
 
 // currentWS is set ONCE at init - never recalculated during session
 let clientData=null, state=DAYS.map(()=>({training:null,food:null,sleep:null}));
