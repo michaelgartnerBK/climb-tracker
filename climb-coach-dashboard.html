@@ -4,11 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLIMB / Coach Dashboard</title>
-<link rel="manifest" href="/manifest-coach.json">
-<link rel="apple-touch-icon" href="/icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="CLIMB Coach">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -306,8 +301,17 @@ function calcScore(cid,tdays,ws){
   return{total:Math.round(tP+fP+sP),t:Math.round(tP),f:Math.round(fP),s:Math.round(sP)};
 }
 
-function sColor(s){
-  if(s>=85) return 'var(--green)';
+function sColor(s, isCurrentWeek){
+  if(isCurrentWeek){
+    const todayIdx=(new Date().getDay()+6)%7;
+    const maxSoFar=Math.round(((todayIdx+1)/7)*100);
+    const ratio=maxSoFar>0?s/maxSoFar:0;
+    if(ratio>=0.95) return 'var(--green)';
+    if(ratio>=0.75) return 'var(--gold)';
+    if(ratio>=0.5) return '#e87a2a';
+    return 'var(--red)';
+  }
+  // Past weeks: fixed thresholds
   if(s>=70) return 'var(--green)';
   if(s>=50) return 'var(--gold)';
   if(s>=30) return '#e87a2a';
@@ -351,7 +355,7 @@ function renderClients(){
   if(!clients.length){list.innerHTML='<div class="empty-state">No clients yet →</div>';return;}
   list.innerHTML='';
   clients.forEach(c=>{
-    const sc=calcScore(c.id,c.training_days,cw),col=sColor(sc.total);
+    const sc=calcScore(c.id,c.training_days,cw),col=sColor(sc.total,isNow);
     const card=document.createElement('div');
     card.className='client-card'+(openCards[c.id]?' open':'');
     card.id=`card-${c.id}`;
@@ -447,7 +451,7 @@ function tabTrend(c){
 function tabHistory(c){
   const weeks=lastNWeeks(MAX_WEEKS);
   return weeks.map(w=>{
-    const s=calcScore(c.id,c.training_days,w),col=sColor(s.total),kw=getKW(w),lbl=weekLabel(w);
+    const s=calcScore(c.id,c.training_days,w),col=sColor(s.total,w===weekStart(0)),kw=getKW(w),lbl=weekLabel(w);
     const wc=weeklyCheckins[c.id]?.[w];
     const hT=Math.max(2,Math.round((s.t/30)*24)),hF=Math.max(2,Math.round((s.f/40)*24)),hS=Math.max(2,Math.round((s.s/30)*24));
     return `<div class="history-row">
@@ -512,11 +516,6 @@ function tabCheckin(c,cw){
     <div class="note-block" style="margin-bottom:14px;">
       <div class="metric-lbl">Coach Message to Client</div>
       <textarea class="msg-ta" id="msg-${c.id}" placeholder="Message shown in client tracker…"></textarea>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#888;white-space:nowrap;">Show for</div>
-        <input id="dur-${c.id}" type="number" min="1" max="90" value="${dur}" style="width:56px;background:#0e0e0e;border:1px solid var(--border-light);color:var(--white);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;text-align:center;padding:4px;border-radius:2px;outline:none;" oninput="msgDuration['${c.id}']=parseInt(this.value)||7"/>
-        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#888;">days</div>
-      </div>
     </div>
     <button class="save-btn" onclick="saveCheckin('${c.id}','${cw}')">Save Check-in</button>
   `;
@@ -556,7 +555,7 @@ async function saveCheckin(cid,ws){
   try{
     await api('weekly_checkins','POST',{client_id:cid,week_start:ws,weight,energy,stress,note,updated_at:new Date().toISOString()});
     if(msgText){
-      const exp=new Date(); exp.setDate(exp.getDate()+dur);
+      const exp=new Date(); exp.setFullYear(exp.getFullYear()+10);
       await api('coach_messages','POST',{client_id:cid,message:msgText,expires_at:`${exp.getFullYear()}-${String(exp.getMonth()+1).padStart(2,'0')}-${String(exp.getDate()).padStart(2,'0')}`});
     }
     await load();
@@ -668,7 +667,7 @@ function generateSummary(cid,cw){
       <div class="sum-grid2">
         <div class="sum-card">
           <div class="sum-lbl">Score · WK ${kw}</div>
-          <div><span class="sum-val" style="color:${sColor(sc.total)}">${sc.total}</span><span class="sum-unit"> / 100</span></div>
+          <div><span class="sum-val" style="color:${sColor(sc.total,cw===weekStart(0))}">${sc.total}</span><span class="sum-unit"> / 100</span></div>
           ${deltaStr}
         </div>
         <div class="sum-card">
@@ -789,7 +788,7 @@ function tabSummary(c,cw,sc){
       <div style="background:#0d0d0d;border:1px solid #333;border-radius:2px;padding:14px;">
         <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#888;margin-bottom:8px;">Score · WK ${kw}</div>
         <div style="display:flex;align-items:baseline;gap:8px;">
-          <div style="font-size:48px;font-weight:900;line-height:1;letter-spacing:-0.02em;color:${sColor(sc.total)};">${sc.total}</div>
+          <div style="font-size:48px;font-weight:900;line-height:1;letter-spacing:-0.02em;color:${sColor(sc.total,cw===weekStart(0))};">${sc.total}</div>
           <div style="font-size:12px;font-weight:300;color:#888;">/ 100</div>
         </div>
         <div style="display:flex;align-items:center;gap:5px;margin-top:6px;">
@@ -1024,7 +1023,7 @@ function generateSummary(cid,cw){
       <div class="sum-card">
         <div class="sc-lbl">Score · WK ${getKW(cw)}</div>
         <div style="display:flex;align-items:baseline;gap:8px;">
-          <div class="sc-val" style="color:${sColor(sc.total)}">${sc.total}</div>
+          <div class="sc-val" style="color:${sColor(sc.total,cw===weekStart(0))}">${sc.total}</div>
           <div class="sc-sub">/ 100</div>
         </div>
         <div class="sc-delta ${deltaCol}">${delta>0?'↑':delta<0?'↓':'→'} ${deltaStr}</div>
@@ -1099,7 +1098,7 @@ function generateSummary(cid,cw){
 }
 
 load();
-setInterval(load,30000);
+setInterval(load,300000);
 </script>
 </body>
 </html>
