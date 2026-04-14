@@ -351,7 +351,7 @@ function changeWeek(d){
 
 function renderClients(){
   const list=document.getElementById('clientList');
-  const cw=weekStart(weekOffset);
+  const cw=weekStart(weekOffset),isNow=weekOffset===0;
   if(!clients.length){list.innerHTML='<div class="empty-state">No clients yet →</div>';return;}
   list.innerHTML='';
   clients.forEach(c=>{
