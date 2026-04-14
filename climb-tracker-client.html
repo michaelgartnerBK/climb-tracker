@@ -4,11 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLIMB / Tracker</title>
-<link rel="manifest" href="/manifest-client.json">
-<link rel="apple-touch-icon" href="/icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="CLIMB">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -76,6 +71,9 @@ body{background:var(--black);color:var(--white);font-family:'Barlow Condensed',s
 .bar-pct{font-size:12px;font-weight:300;color:#555;}
 .bar-track{height:3px;background:#1e1e1e;border-radius:2px;overflow:hidden;}
 .bar-fill-el{height:100%;border-radius:2px;background:#444;transition:width 0.4s ease;}
+.bar-fill-el.sleep{background:#7eb8ff;}
+.bar-fill-el.food{background:#b8ff57;}
+.bar-fill-el.work{background:#e0e0e0;}
 </style>
 <meta property="og:title" content="CLIMB Tracker">
 <meta property="og:description" content="Your weekly tracking link">
@@ -264,19 +262,13 @@ function renderApp(msg){
         <div class="score-denom">/ 100</div>
       </div>
       <div class="bars-col">
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Sleep</div><div class="bar-pct" id="pct-slp">${Math.round((score.s/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-slp" style="width:${Math.min(100,(score.s/30)*100)}%;"></div></div></div>
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Food</div><div class="bar-pct" id="pct-food">${Math.round((score.f/40)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-food" style="width:${Math.min(100,(score.f/40)*100)}%;"></div></div></div>
-        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl">Work</div><div class="bar-pct" id="pct-wrk">${Math.round((score.t/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el" id="bar-wrk" style="width:${Math.min(100,(score.t/30)*100)}%;"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl" style="color:#7eb8ff;">Sleep</div><div class="bar-pct" id="pct-slp">${Math.round((score.s/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el sleep" id="bar-slp" style="width:${Math.min(100,(score.s/30)*100)}%;"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl" style="color:#b8ff57;">Food</div><div class="bar-pct" id="pct-food">${Math.round((score.f/40)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el food" id="bar-food" style="width:${Math.min(100,(score.f/40)*100)}%;"></div></div></div>
+        <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl" style="color:#e0e0e0;">Work</div><div class="bar-pct" id="pct-wrk">${Math.round((score.t/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el work" id="bar-wrk" style="width:${Math.min(100,(score.t/30)*100)}%;"></div></div></div>
       </div>
     </div>
     <div class="verdict" style="background:${verdict.bg};border-bottom:1px solid var(--border);">
       <div class="verdict-txt" style="color:${verdict.col}">${any?verdict.text:'Start your week →'}</div>
-    </div>
-    <div class="col-headers">
-      <div class="col-h"></div>
-      <div class="col-h"><div class="col-h-main">SLEEP</div><div class="col-h-pct">30%</div></div>
-      <div class="col-h"><div class="col-h-main">FOOD</div><div class="col-h-pct">40%</div></div>
-      <div class="col-h"><div class="col-h-main">WORK</div><div class="col-h-pct">30%</div></div>
     </div>
     <div id="daysSection"></div>
   `;
