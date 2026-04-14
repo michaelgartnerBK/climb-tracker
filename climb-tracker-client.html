@@ -222,11 +222,14 @@ function sColor(s){
 function getDayProgress(){return (new Date().getDay()+6)%7;}
 
 function getVerdict(total){
-  const elapsed=getDayProgress()+1;
-  const maxSoFar=Math.round((elapsed/7)*100);
-  const ratio=maxSoFar>0?total/maxSoFar:0;
-  const rem=7-elapsed;
+  const todayIdx=getDayProgress(); // 0=Mo, 6=So
+  // Days remaining INCLUDING today
+  const rem=7-todayIdx;
   const dl=rem===1?'· 1 day left':`· ${rem} days left`;
+  // Max possible score from Mon through today (todayIdx+1 days)
+  const daysLogged=todayIdx+1;
+  const maxSoFar=Math.round((daysLogged/7)*100);
+  const ratio=maxSoFar>0?total/maxSoFar:0;
   if(ratio>=0.95) return{text:`CLIMB MODE ${dl}`,col:'var(--white)',bg:'transparent'};
   if(ratio>=0.75) return{text:`STRONG ${dl}`,col:'var(--white)',bg:'transparent'};
   if(ratio>=0.5) return{text:`BEHIND PACE ${dl}`,col:'var(--gold)',bg:'rgba(240,208,96,0.04)'};
