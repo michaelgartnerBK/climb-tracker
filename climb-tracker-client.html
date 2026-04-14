@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CLIMB / Tracker</title>
+<link rel="manifest" href="/manifest-client.json">
+<link rel="apple-touch-icon" href="/icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CLIMB">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -213,10 +218,13 @@ function getStreak(){
 }
 
 function sColor(s){
-  if(s>=70) return 'var(--green)';
-  if(s>=50) return 'var(--gold)';
-  if(s>=30) return '#e87a2a';
-  return 'var(--white)';
+  const todayIdx=(new Date().getDay()+6)%7;
+  const maxSoFar=Math.round(((todayIdx+1)/7)*100);
+  const ratio=maxSoFar>0?s/maxSoFar:0;
+  if(ratio>=0.95) return 'var(--green)';
+  if(ratio>=0.75) return 'var(--gold)';
+  if(ratio>=0.5) return '#e87a2a';
+  return 'var(--red)';
 }
 
 function getDayProgress(){return (new Date().getDay()+6)%7;}
