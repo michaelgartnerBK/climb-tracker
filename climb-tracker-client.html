@@ -31,6 +31,12 @@ body{background:var(--black);color:var(--white);font-family:'Barlow Condensed',s
 .hero-bottom{margin-top:20px;display:flex;align-items:flex-end;justify-content:space-between;}
 .hero-name{font-size:clamp(20px,6vw,26px);font-weight:700;letter-spacing:0.12em;text-transform:uppercase;}
 .hero-wk{font-size:11px;font-weight:300;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:4px;}
+.wk-nav{display:flex;align-items:center;gap:10px;margin-top:6px;}
+.wk-arrow{font-size:13px;color:#444;cursor:pointer;user-select:none;transition:color 0.15s;}
+.wk-arrow:hover{color:#888;}
+.wk-arrow.off{color:#1e1e1e;cursor:not-allowed;}
+.wk-nav-date{font-size:10px;font-weight:300;letter-spacing:0.22em;color:#555;text-transform:uppercase;}
+.wk-nav-now{font-size:10px;font-weight:300;letter-spacing:0.22em;color:#555;text-transform:uppercase;}
 .streak-block{text-align:right;}
 .streak-num{font-size:38px;font-weight:900;line-height:1;letter-spacing:-0.02em;animation:streakPop 0.6s ease 0.3s both;}
 .streak-lbl{font-size:8px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;color:#555;margin-top:3px;}
@@ -70,6 +76,7 @@ body{background:var(--black);color:var(--white);font-family:'Barlow Condensed',s
 .tbtn.done{background:var(--white);color:#080808;}
 .tbtn.empty{background:transparent;border:1px solid var(--border-mid);color:var(--muted2);}
 .tbtn.disabled{background:transparent;border:1px solid #2a2a2a;color:#2a2a2a;cursor:not-allowed;}
+.tbtn.ontop{background:var(--gold);color:#080808;}
 .save-dot{position:fixed;bottom:24px;right:24px;width:8px;height:8px;border-radius:50%;background:var(--green);opacity:0;transition:opacity 0.3s;z-index:100;box-shadow:0 0 12px var(--green);}
 .save-dot.visible{opacity:1;}
 
@@ -106,8 +113,9 @@ if(urlId){setCookie('climb_client_id',urlId,365);localStorage.setItem('climb_cli
 const CLIENT_ID=urlId||getCookie('climb_client_id')||localStorage.getItem('climb_client_id');
 
 // currentWS is set ONCE at init - never recalculated during session
-let clientData=null, state=DAYS.map(()=>({training:null,food:null,sleep:null}));
-let maxSessions=3, saveTimeouts={}, allCheckins=[], currentWS=null;
+let clientData=null, state=DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null}));
+let maxSessions=3, saveTimeouts={}, allCheckins=[], currentWS=null, viewWS=null;
+let allWeekStates={};
 
 function localDate(d){
   const dt=d||new Date();
@@ -164,23 +172,20 @@ async function init(){
 
     // Set currentWS once - reuse for entire session
     currentWS=weekStart();
+    viewWS=currentWS;
 
-    // Load wider range to handle any edge cases
-    const rangeStart=weekStart(-1);
+    // Load all checkins for week navigation (8 weeks back)
+    const rangeStart=weekStart(-8);
     const allWeekCheckins=await api(`checkins?client_id=eq.${CLIENT_ID}&week_start=gte.${rangeStart}&select=*&order=week_start.desc`)||[];
 
-    // Reset state
-    state=DAYS.map(()=>({training:null,food:null,sleep:null}));
+    // Cache all weeks
+    allWeekCheckins.forEach(c=>{
+      if(!allWeekStates[c.week_start]) allWeekStates[c.week_start]=DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null}));
+      allWeekStates[c.week_start][c.day_index]={training:c.training,food:c.food,sleep:c.sleep,bonus_training:c.bonus_training};
+    });
 
-    // Find checkins for this week
-    const thisWeekCheckins=allWeekCheckins.filter(c=>c.week_start===currentWS);
-
-    // If exact match found, use it
-    if(thisWeekCheckins.length>0){
-      thisWeekCheckins.forEach(c=>{
-        state[c.day_index]={training:c.training,food:c.food,sleep:c.sleep};
-      });
-    }
+    // Reset state for current week
+    state=allWeekStates[currentWS]||DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null}));
 
     // All historical for streak
     allCheckins=await api(`checkins?client_id=eq.${CLIENT_ID}&select=*&order=week_start.desc`)||[];
@@ -198,7 +203,7 @@ function calcScore(weekData){
   const ptT=n>0?30/n:0, ptF=40/7, ptS=30/7;
   for(let i=0;i<7;i++){
     const c=weekData[i];if(!c) continue;
-    if(c.training===true) tP=Math.min(30,tP+ptT);
+    if(c.training===true||c.bonus_training===true) tP=Math.min(30,tP+ptT);
     if(c.food===true) fP+=ptF;
     if(c.sleep===true) sP+=ptS;
   }
@@ -252,11 +257,13 @@ function getVerdict(total){
 }
 
 function renderApp(msg){
-  const kw=getKW(currentWS), wlbl=weekLabel(currentWS);
-  const score=calcScore(state);
+  const isNowView=viewWS===currentWS;
+  const kw=getKW(viewWS), wlbl=weekLabel(viewWS);
+  const viewState=isNowView?state:(allWeekStates[viewWS]||DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})));
+  const score=calcScore(viewState);
   const streak=getStreak();
   const verdict=getVerdict(score.total);
-  const any=state.some(s=>s.training===true||s.food===true||s.sleep===true);
+  const any=viewState.some(s=>s.training===true||s.bonus_training===true||s.food===true||s.sleep===true);
   const col=any?sColor(score.total):'var(--white)';
     document.getElementById('app').innerHTML=`
     <div class="hero">
@@ -266,7 +273,12 @@ function renderApp(msg){
       <div class="hero-bottom">
         <div>
           <div class="hero-name">${clientData.name}</div>
-          <div class="hero-wk">${wlbl}</div>
+          <div class="wk-nav">
+            <span class="wk-arrow${viewWS<=weekStart(-8)?' off':''}" onclick="changeWeek(-1)">←</span>
+            <span class="wk-nav-date">${wlbl}</span>
+            ${isNowView?`<span class="wk-nav-now">· Now</span>`:''}
+            <span class="wk-arrow${isNowView?' off':''}" onclick="changeWeek(1)">→</span>
+          </div>
         </div>
         ${streak>0?`<div class="streak-block"><div class="streak-num">${streak}</div><div class="streak-lbl">Week Streak</div></div>`:''}
       </div>
@@ -284,10 +296,15 @@ function renderApp(msg){
         <div class="bar-row"><div class="bar-hdr"><div class="bar-lbl" style="color:#e0e0e0;">Work</div><div class="bar-pct" id="pct-wrk">${Math.round((score.t/30)*100)}%</div></div><div class="bar-track"><div class="bar-fill-el work" id="bar-wrk" style="width:${Math.min(100,(score.t/30)*100)}%;"></div></div></div>
       </div>
     </div>
-    <div class="verdict" style="background:${verdict.bg};border-bottom:1px solid var(--border);">
-      <div class="verdict-txt" style="color:${verdict.col}">${any?verdict.text:'Start your week →'}</div>
+    // Grace period: last week editable until Tuesday 23:59
+    const todayIdx=(new Date().getDay()+6)%7; // 0=Mo, 1=Tu
+    const prevWS=weekStart(-1);
+    const inGrace=viewWS===prevWS&&todayIdx<=1;
+    const isEditable=isNowView||inGrace;
+    <div class="verdict" style="background:${isNowView?verdict.bg:'transparent'};border-bottom:1px solid var(--border);">
+      <div class="verdict-txt" style="color:${isNowView?verdict.col:'#555'}">${isNowView?(any?verdict.text:'Start your week →'):wlbl+`${inGrace?' · <span style="color:#f0d060;font-size:9px;">editable until Tue</span>':''}`}</div>
     </div>
-    <div id="daysSection"></div>
+    <div id="daysSection" style="opacity:${isEditable?'1':'0.5'};pointer-events:${isEditable?'auto':'none'};"></div>
   `;
   renderDays();
 }
@@ -297,16 +314,30 @@ function daysAgo(ts){
   if(diff===0) return 'Today'; if(diff===1) return '1 day ago'; return `${diff} days ago`;
 }
 
+function changeWeek(d){
+  const curDate=new Date(currentWS+'T12:00:00');
+  const viewDate=new Date(viewWS+'T12:00:00');
+  const offsetWeeks=Math.round((viewDate-curDate)/(7*86400000));
+  const newOffset=offsetWeeks+d;
+  if(newOffset>0||newOffset<-8) return;
+  viewWS=weekStart(newOffset);
+  renderApp(null);
+  renderDays();
+}
+
 function renderDays(){
   const container=document.getElementById('daysSection');
   if(!container) return;
   container.innerHTML='';
-  const trained=state.filter(s=>s.training===true).length;
+  const isNowView=viewWS===currentWS;
+  const viewState=isNowView?state:(allWeekStates[viewWS]||DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})));
+  const trained=viewState.filter(s=>s.training===true).length;
   DAYS.forEach((day,i)=>{
-    const s=state[i];
-    const allDone=s.training===true&&s.food===true&&s.sleep===true;
-    const anyDone=s.training===true||s.food===true||s.sleep===true;
-    const trDone=s.training===true, trDisabled=!trDone&&trained>=maxSessions;
+    const s=viewState[i];
+    const allDone=(s.training===true||s.bonus_training===true)&&s.food===true&&s.sleep===true;
+    const anyDone=s.training===true||s.bonus_training===true||s.food===true||s.sleep===true;
+    const trDone=s.training===true, trBonus=s.bonus_training===true;
+    const trDisabled=!trDone&&!trBonus&&trained>=maxSessions;
     const row=document.createElement('div');
     row.className='day-row';
     row.innerHTML=`
@@ -314,7 +345,7 @@ function renderDays(){
       <div class="day-lbl"><div class="day-main">${day}</div><div class="day-sub">${FULL[i].substring(0,3).toUpperCase()}</div></div>
       <div class="day-cell">${tbtn(i,'sleep',s.sleep,false,'SLEEP')}</div>
       <div class="day-cell">${tbtn(i,'food',s.food,false,'FOOD')}</div>
-      <div class="day-cell">${tbtn(i,'training',s.training,trDisabled,'WORK')}</div>
+      <div class="day-cell">${tbtnWork(i,s.training,s.bonus_training,trDisabled)}</div>
     `;
     container.appendChild(row);
   });
@@ -326,12 +357,46 @@ function tbtn(di,key,val,disabled,label){
   return `<button class="tbtn empty" onclick="toggle(${di},'${key}')">${label}</button>`;
 }
 
+function tbtnWork(di,training,bonus,disabled){
+  if(bonus===true) return `<button class="tbtn ontop" onclick="toggleWork(${di})">✓ ON TOP</button>`;
+  if(training===true) return `<button class="tbtn done" onclick="toggleWork(${di})">✓ DONE</button>`;
+  if(disabled) return `<button class="tbtn disabled">WORK</button>`;
+  return `<button class="tbtn empty" onclick="toggleWork(${di})">WORK</button>`;
+}
+
 function toggle(di,key){
-  state[di][key]=state[di][key]===true?null:true;
+  const todayIdx=(new Date().getDay()+6)%7;
+  const prevWS=weekStart(-1);
+  const inGrace=viewWS===prevWS&&todayIdx<=1;
+  const targetState=inGrace?(allWeekStates[viewWS]||(allWeekStates[viewWS]=DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})))):state;
+  targetState[di][key]=targetState[di][key]===true?null:true;
+  if(inGrace) allWeekStates[viewWS]=targetState;
   renderDays();
   updateScoreDisplay();
-  // Save only the changed field immediately
-  saveField(di,key,state[di][key]);
+  saveField(di,key,targetState[di][key],viewWS);
+}
+
+function toggleWork(di){
+  const todayIdx=(new Date().getDay()+6)%7;
+  const prevWS=weekStart(-1);
+  const inGrace=viewWS===prevWS&&todayIdx<=1;
+  const targetState=inGrace?(allWeekStates[viewWS]||(allWeekStates[viewWS]=DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})))):state;
+  const s=targetState[di];
+  if(s.bonus_training===true){
+    s.bonus_training=null; s.training=null;
+    saveField(di,'training',null,viewWS);
+    saveField(di,'bonus_training',null,viewWS);
+  } else if(s.training===true){
+    s.training=null; s.bonus_training=true;
+    saveField(di,'training',null,viewWS);
+    saveField(di,'bonus_training',true,viewWS);
+  } else {
+    s.training=true; s.bonus_training=null;
+    saveField(di,'training',true,viewWS);
+    saveField(di,'bonus_training',null,viewWS);
+  }
+  renderDays();
+  updateScoreDisplay();
 }
 
 function updateScoreDisplay(){
@@ -361,22 +426,20 @@ function updateScoreDisplay(){
   if(vStrip) vStrip.style.background=v.bg;
 }
 
-async function saveField(di,key,val){
-  const ws=currentWS;
+async function saveField(di,key,val,ws){
+  ws=ws||currentWS;
   try{
     // Check if row exists
-    const existing=await api(`checkins?client_id=eq.${CLIENT_ID}&week_start=eq.${ws}&day_index=eq.${di}&select=id,training,food,sleep`);
+    const existing=await api(`checkins?client_id=eq.${CLIENT_ID}&week_start=eq.${ws}&day_index=eq.${di}&select=id,training,food,sleep,bonus_training`);
     if(existing&&existing.length>0){
-      // Row exists - PATCH only the changed field
       const patch={[key]:val,updated_at:new Date().toISOString()};
       await fetch(`${SB_URL}/rest/v1/checkins?client_id=eq.${CLIENT_ID}&week_start=eq.${ws}&day_index=eq.${di}`,{
         method:'PATCH',
         headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Content-Type':'application/json','Prefer':'return=representation'},
         body:JSON.stringify(patch)
       });
-      // Sync local state with DB values
       const row=existing[0];
-      state[di]={training:row.training,food:row.food,sleep:row.sleep};
+      state[di]={training:row.training,food:row.food,sleep:row.sleep,bonus_training:row.bonus_training};
       state[di][key]=val;
     } else {
       // Row doesn't exist - INSERT with just this field
