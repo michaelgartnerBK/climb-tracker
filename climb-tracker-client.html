@@ -331,8 +331,9 @@ function renderDays(){
   container.innerHTML='';
   const isNowView=viewWS===currentWS;
   const viewState=isNowView?state:(allWeekStates[viewWS]||DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})));
-  const trained=viewState.filter(s=>s.training===true).length;
-  const pflichtVoll=trained>=maxSessions;
+  // Count only regular training (not bonus) against pflicht limit
+  const pflichtDone=viewState.filter(s=>s.training===true).length;
+  const pflichtVoll=pflichtDone>=maxSessions;
   DAYS.forEach((day,i)=>{
     const s=viewState[i];
     const allDone=(s.training===true||s.bonus_training===true)&&s.food===true&&s.sleep===true;
@@ -344,7 +345,7 @@ function renderDays(){
       <div class="day-lbl"><div class="day-main">${day}</div><div class="day-sub">${FULL[i].substring(0,3).toUpperCase()}</div></div>
       <div class="day-cell">${tbtn(i,'sleep',s.sleep,false,'SLEEP')}</div>
       <div class="day-cell">${tbtn(i,'food',s.food,false,'FOOD')}</div>
-      <div class="day-cell">${tbtnWork(i,s.training,s.bonus_training,pflichtVoll&&!s.training&&!s.bonus_training)}</div>
+      <div class="day-cell">${tbtnWork(i,s.training,s.bonus_training,pflichtVoll)}</div>
     `;
     container.appendChild(row);
   });
@@ -356,63 +357,66 @@ function tbtn(di,key,val,disabled,label){
   return `<button class="tbtn empty" onclick="toggle(${di},'${key}')">${label}</button>`;
 }
 
+// pflichtVoll = alle Pflicht-Sessions dieser Woche sind erfüllt
 function tbtnWork(di,training,bonus,pflichtVoll){
   if(bonus===true) return `<button class="tbtn ontop" onclick="toggleWork(${di})">✓ ON TOP</button>`;
   if(training===true) return `<button class="tbtn done" onclick="toggleWork(${di})">✓ DONE</button>`;
-  if(pflichtVoll) return `<button class="tbtn empty" style="border-color:#444;color:#666;" onclick="toggleWork(${di})">WORK</button>`;
-  return `<button class="tbtn empty" onclick="toggleWork(${di})">WORK</button>`;
+  // Leer: immer klickbar - Farbe unterscheidet ob Pflicht voll
+  return `<button class="tbtn empty" onclick="toggleWork(${di})" style="${pflichtVoll?'border-color:#555;color:#888;':''}">WORK</button>`;
 }
 
 function toggle(di,key){
-  const todayIdx=(new Date().getDay()+6)%7;
-  const prevWS=weekStart(-1);
-  const inGrace=viewWS===prevWS&&todayIdx<=1;
-  const targetState=inGrace?(allWeekStates[viewWS]||(allWeekStates[viewWS]=DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})))):state;
+  const inGrace=getInGrace();
+  const targetState=getTargetState(inGrace);
   targetState[di][key]=targetState[di][key]===true?null:true;
-  if(inGrace) allWeekStates[viewWS]=targetState;
   renderDays();
   updateScoreDisplay();
   saveField(di,key,targetState[di][key],viewWS);
 }
 
 function toggleWork(di){
-  const todayIdx=(new Date().getDay()+6)%7;
-  const prevWS=weekStart(-1);
-  const inGrace=viewWS===prevWS&&todayIdx<=1;
-  const targetState=inGrace?(allWeekStates[viewWS]||(allWeekStates[viewWS]=DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})))):state;
+  const inGrace=getInGrace();
+  const targetState=getTargetState(inGrace);
   const s=targetState[di];
-  const trainedCount=targetState.filter(x=>x.training===true).length;
-  const pflichtVoll=trainedCount>=maxSessions;
+  // Count regular training sessions (not bonus)
+  const pflichtDone=targetState.filter(x=>x.training===true).length;
+  const pflichtVoll=pflichtDone>=maxSessions;
 
   if(s.bonus_training===true){
-    // ON TOP → leer
+    // ✓ ON TOP → leer
     s.bonus_training=null;
     saveField(di,'bonus_training',null,viewWS);
   } else if(s.training===true){
-    if(pflichtVoll){
-      // DONE → ON TOP (Pflicht voll, Bonus möglich)
-      s.training=null; s.bonus_training=true;
-      saveField(di,'training',null,viewWS);
-      saveField(di,'bonus_training',true,viewWS);
-    } else {
-      // DONE → leer (Pflicht noch nicht voll, kein Bonus)
-      s.training=null;
-      saveField(di,'training',null,viewWS);
-    }
+    // ✓ DONE → leer (removes from pflicht count)
+    s.training=null;
+    saveField(di,'training',null,viewWS);
   } else {
-    // leer: wenn pflicht voll → direkt ON TOP, sonst → DONE
+    // WORK (leer):
+    // Pflicht noch nicht voll → DONE (zählt als Pflicht)
+    // Pflicht voll → ON TOP (zählt als Bonus)
     if(pflichtVoll){
       s.bonus_training=true; s.training=null;
       saveField(di,'bonus_training',true,viewWS);
-      saveField(di,'training',null,viewWS);
     } else {
       s.training=true; s.bonus_training=null;
       saveField(di,'training',true,viewWS);
-      saveField(di,'bonus_training',null,viewWS);
     }
   }
   renderDays();
   updateScoreDisplay();
+}
+
+function getInGrace(){
+  const todayIdx=(new Date().getDay()+6)%7;
+  return viewWS===weekStart(-1)&&todayIdx<=1;
+}
+
+function getTargetState(inGrace){
+  if(inGrace){
+    if(!allWeekStates[viewWS]) allWeekStates[viewWS]=DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null}));
+    return allWeekStates[viewWS];
+  }
+  return state;
 }
 
 function updateScoreDisplay(){
