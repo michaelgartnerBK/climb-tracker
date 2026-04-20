@@ -486,10 +486,30 @@ function updateScoreDisplay(){
   const viewState=isNowView?state:(allWeekStates[viewWS]||DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})));
   const score=calcScore(viewState);
   const any=viewState.some(s=>s.training===true||s.bonus_training===true||s.food===true||s.sleep===true);
-  // Score number
+
+  // Animate score from current displayed value
   const el=document.querySelector('#score-num')||document.querySelector('.score-num');
-  if(el){el.textContent=score.total;el.style.color=any?sColor(score.total):'var(--white)';}
-  // Update bars
+  if(el){
+    const from=parseInt(el.textContent)||0;
+    const to=score.total;
+    const targetCol=any?sColor(score.total):'var(--white)';
+    if(from===to){el.style.color=targetCol;}
+    else{
+      const dur=Math.min(600,Math.abs(to-from)*18);
+      const start=performance.now();
+      function step(now){
+        const p=Math.min((now-start)/dur,1);
+        const ease=1-Math.pow(1-p,3);
+        const val=Math.round(from+(to-from)*ease);
+        el.textContent=val;
+        el.style.color=targetCol;
+        if(p<1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+  }
+
+  // Update bars with CSS transition already handles animation
   const bars=[
     {id:'bar-slp',pct:'pct-slp',v:score.s,m:30},
     {id:'bar-food',pct:'pct-food',v:score.f,m:40},
@@ -502,9 +522,10 @@ function updateScoreDisplay(){
     if(bEl) bEl.style.width=pct+'%';
     if(pEl) pEl.textContent=Math.round(pct)+'%';
   });
+
   // Verdict
   const v=getVerdict(score.total);
-  const vEl=document.querySelector('.verdict-txt');
+  const vEl=document.querySelector('#verdict-txt')||document.querySelector('.verdict-txt');
   const vStrip=document.querySelector('.verdict');
   if(vEl){vEl.textContent=any?v.text:'Start your week →';vEl.style.color=v.col;}
   if(vStrip) vStrip.style.background=v.bg;
