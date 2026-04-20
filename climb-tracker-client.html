@@ -337,9 +337,6 @@ function renderDays(){
     const s=viewState[i];
     const allDone=(s.training===true||s.bonus_training===true)&&s.food===true&&s.sleep===true;
     const anyDone=s.training===true||s.bonus_training===true||s.food===true||s.sleep===true;
-    const trDone=s.training===true, trBonus=s.bonus_training===true;
-    // Disabled if: pflicht voll AND this day has no training AND no bonus
-    const trDisabled=pflichtVoll&&!trDone&&!trBonus;
     const row=document.createElement('div');
     row.className='day-row';
     row.innerHTML=`
@@ -347,7 +344,7 @@ function renderDays(){
       <div class="day-lbl"><div class="day-main">${day}</div><div class="day-sub">${FULL[i].substring(0,3).toUpperCase()}</div></div>
       <div class="day-cell">${tbtn(i,'sleep',s.sleep,false,'SLEEP')}</div>
       <div class="day-cell">${tbtn(i,'food',s.food,false,'FOOD')}</div>
-      <div class="day-cell">${tbtnWork(i,s.training,s.bonus_training,trDisabled)}</div>
+      <div class="day-cell">${tbtnWork(i,s.training,s.bonus_training,pflichtVoll&&!s.training&&!s.bonus_training)}</div>
     `;
     container.appendChild(row);
   });
@@ -359,10 +356,10 @@ function tbtn(di,key,val,disabled,label){
   return `<button class="tbtn empty" onclick="toggle(${di},'${key}')">${label}</button>`;
 }
 
-function tbtnWork(di,training,bonus,disabled){
+function tbtnWork(di,training,bonus,pflichtVoll){
   if(bonus===true) return `<button class="tbtn ontop" onclick="toggleWork(${di})">✓ ON TOP</button>`;
   if(training===true) return `<button class="tbtn done" onclick="toggleWork(${di})">✓ DONE</button>`;
-  if(disabled) return `<button class="tbtn disabled">WORK</button>`;
+  if(pflichtVoll) return `<button class="tbtn empty" style="border-color:#444;color:#666;" onclick="toggleWork(${di})">WORK</button>`;
   return `<button class="tbtn empty" onclick="toggleWork(${di})">WORK</button>`;
 }
 
@@ -403,10 +400,16 @@ function toggleWork(di){
       saveField(di,'training',null,viewWS);
     }
   } else {
-    // leer → DONE
-    s.training=true; s.bonus_training=null;
-    saveField(di,'training',true,viewWS);
-    saveField(di,'bonus_training',null,viewWS);
+    // leer: wenn pflicht voll → direkt ON TOP, sonst → DONE
+    if(pflichtVoll){
+      s.bonus_training=true; s.training=null;
+      saveField(di,'bonus_training',true,viewWS);
+      saveField(di,'training',null,viewWS);
+    } else {
+      s.training=true; s.bonus_training=null;
+      saveField(di,'training',true,viewWS);
+      saveField(di,'bonus_training',null,viewWS);
+    }
   }
   renderDays();
   updateScoreDisplay();
