@@ -939,8 +939,11 @@ function tabSummary(c,cw,sc){
 }
 
 function getStreak(cid,tdays){
+  const currentW=weekStart(0);
   const weeks={};
-  Object.entries(checkins[cid]||{}).forEach(([ws,wd])=>{ weeks[ws]=wd; });
+  Object.entries(checkins[cid]||{}).forEach(([ws,wd])=>{
+    if(ws!==currentW) weeks[ws]=wd; // exclude current week
+  });
   const sorted=Object.keys(weeks).sort().reverse();
   let streak=0;
   for(const ws of sorted){
