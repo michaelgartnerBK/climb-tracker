@@ -1032,10 +1032,15 @@ function generateSummary(cid,cw){
 
   // Header color based on score ratio
   const todayIdx2=(new Date().getDay()+6)%7;
-  const maxSoFar2=cw===weekStart(0)?Math.round(((todayIdx2+1)/7)*100):100;
-  const ratio2=maxSoFar2>0?sc.total/maxSoFar2:0;
-  const headerCol=ratio2>=0.95?'#b8ff57':ratio2>=0.75?'#f0d060':ratio2>=0.5?'#e87a2a':'#ff4444';
-  const headerTxt=ratio2>=0.75?'#080808':'#080808';
+  const isCurrentWk=cw===weekStart(0);
+  let headerCol;
+  if(isCurrentWk){
+    const maxSoFar2=Math.round(((todayIdx2+1)/7)*100);
+    const ratio2=maxSoFar2>0?sc.total/maxSoFar2:0;
+    headerCol=ratio2>=0.95?'#b8ff57':ratio2>=0.75?'#f0d060':ratio2>=0.5?'#e87a2a':'#ff4444';
+  } else {
+    headerCol=sc.total>=70?'#b8ff57':sc.total>=50?'#f0d060':sc.total>=30?'#e87a2a':'#ff4444';
+  }
 
   const el=document.getElementById(`summary-content-${cid}`);
   if(!el) return;
@@ -1112,22 +1117,42 @@ function generateSummary(cid,cw){
 }
 
 function screenshotSummary(cid){
-  const note=document.getElementById(`coach-note-${cid}`)?.value||'';
-  if(note){
-    const ta=document.getElementById(`coach-note-${cid}`);
-    if(ta){
-      const div=document.createElement('div');
-      div.style.cssText=ta.style.cssText+'display:block;';
-      div.textContent=note;
-      ta.parentNode.replaceChild(div,ta);
-    }
+  // Bake textarea value into a div before capturing
+  const ta=document.getElementById(`coach-note-${cid}`);
+  if(ta&&ta.value){
+    const div=document.createElement('div');
+    div.style.cssText='font-size:20px;font-weight:700;letter-spacing:0.03em;line-height:1.35;color:#e0e0e0;text-transform:uppercase;font-family:Barlow Condensed,sans-serif;';
+    div.textContent=ta.value;
+    ta.parentNode.replaceChild(div,ta);
   }
+
   const el=document.getElementById(`screenshot-${cid}`);
   if(!el) return;
-  // Open print dialog for screenshot
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0;}body{background:#040404;padding:32px;display:flex;justify-content:center;font-family:'Barlow Condensed',sans-serif;}</style></head><body>${el.outerHTML}</body></html>`);
-  w.document.close();
+
+  const btn=document.querySelector(`[onclick="screenshotSummary('${cid}')"]`);
+  if(btn) btn.textContent='Generating…';
+
+  // Load html2canvas then capture
+  const script=document.createElement('script');
+  script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+  script.onload=()=>{
+    html2canvas(el,{
+      backgroundColor:'#080808',
+      scale:3,
+      useCORS:true,
+      logging:false,
+      width:el.offsetWidth,
+      height:el.offsetHeight
+    }).then(canvas=>{
+      const link=document.createElement('a');
+      const c=clients.find(x=>x.id===cid);
+      link.download=`CLIMB-Summary-${c?.name||cid}-${new Date().toISOString().slice(0,10)}.png`;
+      link.href=canvas.toDataURL('image/png');
+      link.click();
+      if(btn) btn.textContent='Share Screenshot ↗';
+    });
+  };
+  document.head.appendChild(script);
 }
 
 load();
