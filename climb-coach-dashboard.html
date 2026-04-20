@@ -1092,15 +1092,14 @@ function generateSummary(cid,cw){
       </div>
 
       <!-- ON TOP -->
-      ${bonusSessions>0?`<div style="padding:12px 24px;border-bottom:1px solid #111;display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#555;">ON TOP Sessions</div>
-        <div style="font-size:13px;font-weight:700;color:#f0d060;">↑ ${bonusSessions}× extra</div>
+      ${bonusSessions>0?`<div style="padding:14px 24px;border-bottom:1px solid #111;">
+        <div style="font-size:18px;font-weight:900;color:#f0d060;letter-spacing:0.05em;text-transform:uppercase;">${bonusSessions}× ON TOP WORK SESSIONS</div>
       </div>`:''}
 
       <!-- Coach Note -->
       ${coachNote?`<div style="padding:18px 24px;border-bottom:1px solid #111;">
         <div style="font-size:8px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:#333;margin-bottom:10px;">Coach</div>
-        <div style="font-size:20px;font-weight:700;letter-spacing:0.03em;line-height:1.35;color:#e0e0e0;text-transform:uppercase;">${coachNote}</div>
+        <div style="font-size:20px;font-weight:700;letter-spacing:0.03em;line-height:1.35;color:#e0e0e0;text-transform:uppercase;white-space:pre-wrap;">${coachNote}</div>
       </div>`:`<div style="padding:18px 24px;border-bottom:1px solid #111;">
         <div style="font-size:8px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:#333;margin-bottom:8px;">Coach</div>
         <textarea id="coach-note-${cid}" placeholder="Add your message..." style="width:100%;background:transparent;border:none;color:#e0e0e0;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;outline:none;resize:none;line-height:1.35;" rows="2"></textarea>
