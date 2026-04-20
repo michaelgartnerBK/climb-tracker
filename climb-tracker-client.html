@@ -332,12 +332,14 @@ function renderDays(){
   const isNowView=viewWS===currentWS;
   const viewState=isNowView?state:(allWeekStates[viewWS]||DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})));
   const trained=viewState.filter(s=>s.training===true).length;
+  const pflichtVoll=trained>=maxSessions;
   DAYS.forEach((day,i)=>{
     const s=viewState[i];
     const allDone=(s.training===true||s.bonus_training===true)&&s.food===true&&s.sleep===true;
     const anyDone=s.training===true||s.bonus_training===true||s.food===true||s.sleep===true;
     const trDone=s.training===true, trBonus=s.bonus_training===true;
-    const trDisabled=!trDone&&!trBonus&&trained>=maxSessions;
+    // Disabled if: pflicht voll AND this day has no training AND no bonus
+    const trDisabled=pflichtVoll&&!trDone&&!trBonus;
     const row=document.createElement('div');
     row.className='day-row';
     row.innerHTML=`
@@ -382,15 +384,26 @@ function toggleWork(di){
   const inGrace=viewWS===prevWS&&todayIdx<=1;
   const targetState=inGrace?(allWeekStates[viewWS]||(allWeekStates[viewWS]=DAYS.map(()=>({training:null,food:null,sleep:null,bonus_training:null})))):state;
   const s=targetState[di];
+  const trainedCount=targetState.filter(x=>x.training===true).length;
+  const pflichtVoll=trainedCount>=maxSessions;
+
   if(s.bonus_training===true){
-    s.bonus_training=null; s.training=null;
-    saveField(di,'training',null,viewWS);
+    // ON TOP → leer
+    s.bonus_training=null;
     saveField(di,'bonus_training',null,viewWS);
   } else if(s.training===true){
-    s.training=null; s.bonus_training=true;
-    saveField(di,'training',null,viewWS);
-    saveField(di,'bonus_training',true,viewWS);
+    if(pflichtVoll){
+      // DONE → ON TOP (Pflicht voll, Bonus möglich)
+      s.training=null; s.bonus_training=true;
+      saveField(di,'training',null,viewWS);
+      saveField(di,'bonus_training',true,viewWS);
+    } else {
+      // DONE → leer (Pflicht noch nicht voll, kein Bonus)
+      s.training=null;
+      saveField(di,'training',null,viewWS);
+    }
   } else {
+    // leer → DONE
     s.training=true; s.bonus_training=null;
     saveField(di,'training',true,viewWS);
     saveField(di,'bonus_training',null,viewWS);
